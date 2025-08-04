@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}My Assets{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto bg-white shadow rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-6">My Allocated Assets</h2>
+
+    {% if assets %}
+    <div class="overflow-x-auto">
+    <table class="w-full">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="p-2 text-left">Item</th>
+                <th class="p-2 text-left">Model</th>
+                <th class="p-2 text-left">Allocated Date</th>
+                <th class="p-2 text-left">Allocated By</th>
+                <th class="p-2 text-left">Remarks</th>
+                <th class="p-2 text-left">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asset in assets %}
+            <tr class="border-t">
+                <td class="p-2">{{ asset['ItemName'] }}</td>
+                <td class="p-2">{{ asset['Model'] }}</td>
+                <td class="p-2">{{ asset['AllocateDate'] }}</td>
+                <td class="p-2">{{ asset['AllocatedBy'] }}</td>
+                <td class="p-2">{{ asset['Description'] }}</td>
+                <td class="p-2">
+                    <button onclick="openModal({{ asset['AssetId'] }})"
+                        class="text-white bg-red-600 px-3 py-1 rounded hover:bg-red-700 text-sm">
+                        Report Issue
+                    </button>
+                </td>
+            </tr>
+
+        <!-- Show OPEN issues -->
+        {% if open_issues_by_asset.get(asset['AssetId']) %}
+        <tr class="bg-yellow-50 text-sm text-yellow-800">
+            <td colspan="6" class="p-2 pl-6">
+                <strong>Open Issues:</strong>
+                <ul class="list-disc ml-4 mt-1 space-y-1">
+                    {% for issue in open_issues_by_asset[asset['AssetId']] %}
+                    <li>
+                        "{{ issue['IssueText'] }}"
+                        <span class="text-xs text-gray-600">Reported: {{ issue['ReportedDate'] }}</span>
+                        <span class="text-red-600 font-semibold ml-2">[Status: {{ issue['Status'] }}]</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% endif %}
+
+        <!-- Show RESOLVED issues -->
+        {% if resolved_issues_by_asset.get(asset['AssetId']) %}
+        <tr class="bg-gray-50 text-sm text-gray-700">
+            <td colspan="6" class="p-2 pl-6">
+                <strong>Resolved Issues:</strong>
+                <ul class="list-disc ml-4 mt-1 space-y-1">
+                    {% for issue in resolved_issues_by_asset[asset['AssetId']] %}
+                    <li>
+                        "{{ issue['IssueText'] }}"
+                        → <em class="text-green-600">{{ issue['ResolvedComment'] }}</em>
+                        <span class="text-xs text-gray-600">({{ issue['ResolvedDate'] }})</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="text-gray-600">No allocated assets found.</p>
+    {% endif %}
+</div>
+
+<!-- Modal -->
+<div id="issueModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded shadow-lg w-full max-w-md p-6">
+        <h3 class="text-xl font-semibold mb-4">Report Asset Issue</h3>
+        <form method="POST" id="issueForm">
+            <input type="hidden" name="asset_id" id="modalAssetId">
+            <textarea name="issue_text" rows="4" required
+                class="w-full border border-gray-300 rounded p-2 mb-4"
+                placeholder="Describe the issue..."></textarea>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeModal()"
+                    class="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500">Cancel</button>
+                <button type="submit"
+                    class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(assetId) {
+        const modal = document.getElementById('issueModal');
+        const form = document.getElementById('issueForm');
+        document.getElementById('modalAssetId').value = assetId;
+        form.action = '/employee/report_issue/' + assetId;
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('issueModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

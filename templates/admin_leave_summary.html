@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Leave Summary{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-4">
+          {% for category, message in messages %}
+            <div class="px-4 py-2 rounded text-white
+                        {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+<div class="bg-white shadow rounded-lg">
+  
+  <div class="px-4 py-5 sm:p-6">
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold mb-6">Leave Summary</h1>
+      </div>
+
+  <!-- ---------- Filter form ---------- -->
+  <form method="POST" class="bg-white p-4 rounded-md shadow mb-8 grid sm:grid-cols-6 gap-4 items-end">
+    <div class="sm:col-span-2">
+      <label class="block text-sm font-medium mb-1">From date</label>
+      <input type="date" name="date_from" value="{{ f_date_from }}" class="w-full border px-3 py-2 rounded-md">
+    </div>
+    <div class="sm:col-span-2">
+      <label class="block text-sm font-medium mb-1">To date</label>
+      <input type="date" name="date_to" value="{{ f_date_to }}" class="w-full border px-3 py-2 rounded-md">
+    </div>
+    <div class="sm:col-span-2">
+      <label class="block text-sm font-medium mb-1">Leave type</label>
+      <select name="leave_type_id" class="w-full border px-3 py-2 rounded-md">
+        <option value="" {% if not f_leave_type %}selected{% endif %}>All</option>
+        {% for lt in leave_types %}
+          <option value="{{ lt[0] }}" {% if f_leave_type|int == lt[0] %}selected{% endif %}>{{ lt[1] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="sm:col-span-6 text-right">
+      <button class="bg-primary text-white px-6 py-2 rounded-md">Fetch</button>
+    </div>
+  </form>
+
+  <!-- ---------- Results table ---------- -->
+  <table class="min-w-full bg-white rounded-md shadow text-sm">
+    <thead class="bg-gray-50 text-left uppercase text-xs font-medium text-gray-500">
+      <tr>
+        <th class="px-4 py-3 text-center">Sl No.</th>
+        <th class="px-4 py-3 text-center">Employee</th>
+        <th class="px-4 py-3 text-center">Total Leaves</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y">
+      {% for row in summary %}
+      <tr>
+        <td class="px-4 py-3 text-center">{{ loop.index }}</td>
+        <td class="px-4 py-3 text-center">{{ row[1] }}</td>
+        <td class="px-4 py-3 text-center">{{ row[2]|int }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+</div>
+</div>
+{% endblock %}

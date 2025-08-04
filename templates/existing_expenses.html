@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block title %}Expenses List{% endblock %}
+{% block content %}
+<style>
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes zoom-in {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.25s ease-out forwards;
+  }
+
+  .animate-zoom-in {
+    animation: zoom-in 0.3s ease-out forwards;
+  }
+</style>
+<div class="max-w-6xl mx-auto">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="mb-4">
+    {% for category, message in messages %}
+    <div class="px-4 py-2 rounded text-white
+                    {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+  <div class="bg-white shadow rounded-lg px-4 py-5 sm:p-6">
+    <h2 class="text-2xl font-bold mb-6">Expense List</h2>
+    <div class="mb-4 flex justify-between items-center  ">
+      <div>
+
+      </div>
+    </div>
+    <!-- Filter Form -->
+    <form method="get" class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-6 text-sm">
+
+      {% if session.emp_type == 'admi' %} <!-- Later make it admin to work-->
+      <select name="employee_id" class="border px-3 py-2 rounded">
+        <option value="">All Employees</option>
+        {% for emp in employees %}
+        <option value="{{ emp[0] }}" {% if request.args.get('employee_id')==emp[0]|string %}selected{% endif %}>
+          {{ emp[1] }} {{ emp[2] }} (ID: {{ emp[0] }})
+        </option>
+        {% endfor %}
+      </select>
+      <select name="expense_type" class="border px-3 py-2 rounded">
+        <option value="">All Types</option>
+        {% for et in expense_types %}
+        <option value="{{ et[1] }}" {% if request.args.get('expense_type')==et[1] %}selected{% endif %}>{{ et[1] }}
+        </option>
+        {% endfor %}
+      </select>
+      {% endif %}
+      <select name="status" class="border px-3 py-2 rounded">
+        <option value="">All Status</option>
+        <option value="pending" {{ 'selected' if request.args.get('status')=='pending' }}>Pending</option>
+        <option value="approved" {{ 'selected' if request.args.get('status')=='approved' }}>Approved</option>
+        <option value="rejected" {{ 'selected' if request.args.get('status')=='rejected' }}>Rejected</option>
+      </select>
+      <input type="date" name="from_date" value="{{ request.args.get('from_date', '') }}"
+        class="border px-3 py-2 rounded">
+      <input type="date" name="to_date" value="{{ request.args.get('to_date', '') }}" class="border px-3 py-2 rounded">
+      <div class="flex items-center space-x-2">
+        <button type="submit" class="bg-blue-600 text-white px-2 py-2 rounded hover:bg-blue-700">Apply</button>
+        <div class="flex items-center space-x-2">
+          <a href="{{ url_for('existing_expenses') }}"
+            class="bg-gray-500 text-white px-2 py-2 rounded hover:bg-gray-600">Reset</a>
+        </div>
+        <div class="flex items-center space-x-2">
+          {% if session.emp_type == 'admin' %}
+          <a href="{{ url_for('export_expenses') }}" title="Download"
+            class="bg-green-600 text-white px-2 py-2 rounded hover:bg-green-700">
+            <i class="fa-solid fa-download"></i>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+
+
+    <div class="overflow-x-auto">
+      <!-- Expenses Table -->
+      <table class="min-w-full bg-white rounded-md shadow text-sm">
+        <thead class="bg-gray-50 text-left uppercase text-xs font-medium text-gray-500">
+          <tr>
+            <th class="px-4 py-3">S.No.</th>
+            <th class="px-4 py-3">Name</th>
+            <th class="px-4 py-3">Type</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3">Expense Date</th>
+            <th class="px-4 py-3">Requested Date</th>
+            <th class="px-4 py-3">Invoice</th>
+            {% if session.emp_type == 'admin' or 'emp' %}<th class="px-4 py-3 text-center">Actions</th>{% endif %}
+            <th class="px-4 py-3">Delete</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y">
+          {% for ex in expenses %}
+          <tr>
+            <td class="px-4 py-3">{{ loop.index }}</td>
+            <td class="px-4 py-3">{{ ex[2] }}</td>
+            <td class="px-4 py-3">{{ ex[1] }}</td>
+            <td class="px-4 py-3">{{ ex[4] }}</td>
+            <td class="px-4 py-3">{{ ex[11] if ex[11] else 'Not set' }}</td>
+            <td class="px-4 py-3">{{ ex[7] }}</td>
+            <td class="px-4 py-3 text-center">
+              {% if ex[12] %}
+              <button onclick="showInvoiceModal('{{ ex[12] }}')" class="text-blue-600 hover:underline">View</button>
+              {% else %}
+              N/A
+              {% endif %}
+            </td>
+            {% if session.emp_type == 'admin' or 'emp' %}
+            <td class="px-4 py-3 text-center">
+              <button onclick="loadModal({{ ex[0] }})" class="text-blue-600 hover:underline"><i
+                  class="fa-solid fa-eye"></i></button>
+            </td>
+            <td class="px-4 py-3 text-center">
+              {% if ex[4] == 'pending' %}
+              <form method="POST" action="{{ url_for('delete_expense', expense_id=ex[0]) }}">
+                <button type="submit" class="btn text-red-500 btn-danger btn-sm">
+                  Delete
+                </button>
+              </form>
+              {% endif %}
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-6 flex justify-center space-x-2">
+      {% if page > 1 %}
+      <a href="{{ request.full_path.replace('page=' ~ page, 'page=' ~ (page - 1)) }}"
+        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
+      {% endif %}
+      <span class="px-3 py-1 bg-blue-600 text-white rounded">{{ page }}</span>
+      {% if page < total_pages %} <a href="{{ request.full_path.replace('page=' ~ page, 'page=' ~ (page + 1)) }}"
+        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
+        {% endif %}
+    </div>
+  </div>
+</div>
+<!-- Invoice Modal Viewer -->
+<div id="invoiceModal" onclick="closeInvoiceModal()"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden animate-fade-in">
+  <div class="relative bg-white rounded-lg shadow-lg max-w-3xl w-full m-4 animate-zoom-in p-4">
+    <button class="absolute top-3 right-4 text-gray-600 text-xl" onclick="closeInvoiceModal()">&times;</button>
+    <div id="invoiceContent" class="max-h-[80vh] overflow-auto rounded">
+      <!-- Dynamic content goes here -->
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg w-full max-w-md p-6 shadow-xl relative">
+    <button class="absolute top-2 right-2 text-gray-500 hover:text-black" onclick="closeModal()">&times;</button>
+    <h3 class="text-lg font-semibold mb-4">Expense Details</h3>
+    <div id="modal-content" class="space-y-2 text-sm text-gray-800">Loading...</div>
+    <form id="action-form" method="POST" class="mt-4 space-y-2 hidden">
+      <div>
+        <label class="block text-sm font-medium mb-1">Approved By</label>
+        <input type="text" name="approved_by" readonly value="{{ session.first_name }} {{ session.last_name }}"
+          class="w-full border px-3 py-2 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed">
+      </div>
+
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Comments (Optional)</label>
+        <textarea name="approver_comments" id="approver_comments_field" class="w-full border px-3 py-2 rounded-md"
+          rows="3" placeholder="Enter comments or leave blank..."></textarea>
+      </div>
+      {% if session.emp_type == 'admin'%}
+      <div class="flex justify-between gap-2">
+        <button type="submit" formaction="" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          id="approve-btn">Approve</button>
+        <button type="submit" formaction="" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          id="reject-btn">Reject</button>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<script>
+  function loadModal(expenseId) {
+    fetch(`/api/expense/${expenseId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById('modal-content').innerHTML = `<p class="text-red-600">${data.error}</p>`;
+          document.getElementById('action-form').classList.add('hidden');
+        } else {
+          document.getElementById('modal-content').innerHTML = `
+            <div><strong>Employee ID:</strong> ${data.employee_id}</div>
+            <div><strong>Name:</strong> ${data.emp_name}</div>
+            <div><strong>Type:</strong> ${data.type}</div>
+            <div><strong>Description:</strong> ${data.description}</div>
+            <div><strong>Status:</strong> ${data.status}</div>
+            <div><strong>Amount:</strong> ${data.amount}</div>
+            <div><strong>Requested Date:</strong> ${data.requested_date}</div>
+            <div><strong>Approved Date:</strong> ${data.approved_date}</div>
+            <div><strong>Verified By:</strong> ${data.approved_by || 'Not set'}</div>
+            <div><strong>Comments:</strong> ${data.approver_comments || 'No comments'}</div>
+          `;
+
+          const isAdmin = "{{ session.emp_type }}" === "admin";
+          const status = data.status;
+
+          const form = document.getElementById('action-form');
+          if (isAdmin && status === 'pending') {
+            form.classList.remove('hidden');
+            document.getElementById('approve-btn').setAttribute('formaction', `/admin/expense/${expenseId}/approved`);
+            document.getElementById('reject-btn').setAttribute('formaction', `/admin/expense/${expenseId}/rejected`);
+          } else {
+            form.classList.add('hidden');
+          }
+        }
+
+        document.getElementById('modal').classList.remove('hidden');
+        document.getElementById('modal').classList.add('flex');
+      });
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.add('hidden');
+    document.getElementById('modal').classList.remove('flex');
+  }
+</script>
+<script>
+  function showInvoiceModal(path) {
+    const modal = document.getElementById('invoiceModal');
+    const container = document.getElementById('invoiceContent');
+    const ext = path.split('.').pop().toLowerCase();
+
+    if (['pdf'].includes(ext)) {
+      container.innerHTML = `<iframe src="/${path}" class="w-full h-[75vh] rounded" frameborder="0"></iframe>`;
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+      container.innerHTML = `<img src="/${path}" class="w-full max-h-[75vh] object-contain rounded" alt="Invoice Image">`;
+    } else {
+      container.innerHTML = `<p class="text-center text-gray-600">Unsupported file type</p>`;
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  function closeInvoiceModal() {
+    const modal = document.getElementById('invoiceModal');
+    const container = document.getElementById('invoiceContent');
+    modal.classList.add('hidden');
+    container.innerHTML = '';
+  }
+</script>
+
+
+{% endblock %}

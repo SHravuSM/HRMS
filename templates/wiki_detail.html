@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ page[2] }}{% endblock %}
+{% block content %}
+<!-- Highlight.js for code syntax -->
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Quill + syntax:true produces <pre><code class="language-xxx"> blocks.
+    // But just in case you have stray <pre class="ql-syntax"> without <code>,
+    // we normalize them into <pre><code> and then highlight:
+
+    document.querySelectorAll('pre.ql-syntax').forEach(pre => {
+      // wrap inner text in a <code> so highlight.js will pick it up
+      const code = document.createElement('code');
+      code.innerHTML = pre.innerHTML;
+      pre.innerHTML = '';
+      pre.appendChild(code);
+    });
+
+    // Now highlight *all* <pre><code> blocks
+    document.querySelectorAll('pre code').forEach(block => {
+      hljs.highlightElement(block);
+    });
+  });
+</script>
+
+<div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6 space-y-6">
+  <h1 class="text-3xl font-bold">{{ page[2] }}</h1>
+  {% if page[4] %}
+  <img src="{{ url_for('static', filename='wikiCatImg/' ~ page[4]) }}"
+       alt="{{ page[2] }}"
+       class="h-48 w-full object-cover rounded-md">
+  {% endif %}
+  <div class="prose max-w-none">
+    {{ page[3]|safe }}
+  </div>
+  <a href="{{ url_for('employee_wiki_list') }}"
+     class="mt-6 inline-block text-primary hover:underline">
+    ← Back to All Wikis
+  </a>
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Add Project - Project Tracking System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-2">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="mb-4">
+        {% for category, message in messages %}
+        <div class="px-4 py-2 rounded text-white
+                    {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+</div>
+<div class="bg-white shadow rounded-lg">
+    <div class="mb-4">
+        <h1 class="text-3xl font-bold text-gray-900 pt-4 text-left pl-6">Add New Project</h1>
+    </div>
+    <div class="px-4 py-5 sm:p-6">
+        <form method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label for="project_name" class="block text-sm font-medium text-gray-700">Project Name</label>
+                    <input type="text" name="project_name" id="project_name" required
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                        placeholder="Enter project name">
+                </div>
+
+                <div>
+                    <label for="priority" class="block text-sm font-medium text-gray-700">Priority</label>
+                    <select name="priority" id="priority" required
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                        <option value="">Select Priority</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="project_status" class="block text-sm font-medium text-gray-700">Project Status</label>
+                    <select name="project_status" id="project_status" required
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                        <option value="active">Active</option>
+                        <option value="inpipeline">In Pipeline</option>
+                        <option value="on_hold">On Hold</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="project_desc" class="block text-sm font-medium text-gray-700">Project
+                        Description</label>
+                    <textarea name="project_desc" id="project_desc" rows="4"
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                        placeholder="Enter project description"></textarea>
+                </div>
+
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" required
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
+                    <input type="date" name="end_date" id="end_date"
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                <a href="{{ url_for('admin_dashboard') }}"
+                    class="bg-red-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-200">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="bg-green-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-200">
+                    <i class="fas fa-save mr-2"></i>
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Set minimum date to today for start date
+    document.getElementById('start_date').min = new Date().toISOString().split('T')[0];
+
+    // Update end date minimum when start date changes
+    document.getElementById('start_date').addEventListener('change', function () {
+        document.getElementById('end_date').min = this.value;
+    });
+</script>
+{% endblock %}

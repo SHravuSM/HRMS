@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}All Wikis{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+            {% for category, message in messages %}
+                <div class="px-4 py-2 rounded text-white
+                            {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+                {{ message }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+    <h1 class="text-3xl font-bold text-gray-900 mb-6"> All Wikis </h1>
+<div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for w in wikis %}
+  <div class="bg-white shadow rounded-lg p-4 hover:shadow-lg transition">
+        {% if w[5] %}
+    <img src="{{ url_for('static', filename='wikiCatImg/' ~ w[5]) }}"
+         alt="{{ w[4] }}"
+         class="h-32 w-full object-cover rounded-md mb-4">
+    {% endif %}
+    <h2 class="text-xl font-semibold mb-2">{{ w[1] }}</h2>
+    <p class="text-sm text-gray-500">{{ w[4] }} | {{ w[3]|todate }}</p>
+    <a href="{{ url_for('wiki_detail', wiki_id=w[0]) }}"
+       class="inline-block mt-4 text-primary hover:underline">
+      Read More →
+    </a>
+  </div>
+  {% endfor %}
+</div>
+    {% if not wikis %}
+    <div class="bg-white p-6 shadow rounded-lg text-center">
+        <p class="text-gray-500">No wikis available at the moment.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

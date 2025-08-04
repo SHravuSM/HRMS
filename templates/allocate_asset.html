@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Allocate Asset{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+            {% for category, message in messages %}
+                <div class="px-4 py-2 rounded text-white
+                            {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+                {{ message }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+    <h2 class="text-2xl font-bold mb-4">Allocate Asset to Employee</h2>
+    <form method="POST">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Asset -->
+            <div>
+                <label class="block text-sm font-medium">Available Asset</label>
+                <select name="asset_id"
+                        class="w-full border p-2 rounded bg-gray-100"
+                        {% if selected_asset_id %}disabled{% endif %}>
+                    {% for asset in assets %}
+                        <option value="{{ asset['AssetId'] }}" {% if asset['AssetId'] == selected_asset_id %}selected{% endif %}>
+                            {{ asset['ItemName'] }} - {{ asset['Model'] }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if selected_asset_id %}
+                <input type="hidden" name="asset_id" value="{{ selected_asset_id }}">
+                {% endif %}
+            </div>
+
+            <!-- Employee -->
+            <div>
+                <label class="block text-sm font-medium">Employee</label>
+                <select name="employee_id" required class="w-full border p-2 rounded">
+                    {% for emp in employees %}
+                        <option value="{{ emp['emp_id'] }}">{{ emp['first_name'] }} {{ emp['last_name'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Allocated By -->
+            <div>
+                <label class="block text-sm font-medium">Allocated By</label>
+                <select name="allocated_by" required class="w-full border p-2 rounded">
+                    <option value="Akshay">Akshay</option>
+                    <option value="Kumar">Kumar</option>
+                    <option value="Varsha">Varsha</option>
+                </select>
+            </div>
+
+            <!-- Description -->
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium">Description</label>
+                <textarea name="description" rows="3" class="w-full border p-2 rounded"></textarea>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Allocate</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

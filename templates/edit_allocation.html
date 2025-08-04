@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Return Asset{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white shadow rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Return Asset</h2>
+    <form method="POST">
+        <p class="mb-4">Are you sure you want to mark the asset <strong>{{ allocation['ItemName'] }} - {{ allocation['Model'] }}</strong> as returned by <strong>{{ allocation['FirstName'] }} {{ allocation['LastName'] }}</strong>?</p>
+        <div class="flex justify-end gap-3">
+            <a href="{{ url_for('manage_allocation') }}" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancel</a>
+            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Mark Returned</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

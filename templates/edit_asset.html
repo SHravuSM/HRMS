@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Edit Asset{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Edit Asset</h2>
+    <form method="POST">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium">Item Name</label>
+                <input type="text" name="item_name" value="{{ asset['ItemName'] }}" required class="w-full border p-2 rounded">
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Model</label>
+                <input type="text" name="model" value="{{ asset['Model'] }}" required class="w-full border p-2 rounded">
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Price</label>
+                <input type="number" step="0.01" name="price" value="{{ asset['Price'] }}" required class="w-full border p-2 rounded">
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Status</label>
+                <select name="status" class="w-full border p-2 rounded">
+                    <option value="Available" {% if asset['Status'] == 'Available' %}selected{% endif %}>Available</option>
+                    <option value="Allocated" {% if asset['Status'] == 'Allocated' %}selected{% endif %}>Allocated</option>
+                </select>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium">Descriptions</label>
+                <textarea name="descriptions" rows="4" class="w-full border p-2 rounded">{{ asset['Descriptions'] }}</textarea>
+            </div>
+        </div>
+        <div class="mt-6 flex justify-between">
+            <a href="{{ url_for('view_assets') }}" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancel</a>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Update Asset
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

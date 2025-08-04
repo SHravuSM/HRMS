@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Manage Allocations{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto bg-white shadow rounded-lg p-6">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+            {% for category, message in messages %}
+                <div class="px-4 py-2 rounded text-white
+                            {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+                {{ message }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+    <h2 class="text-2xl font-bold mb-6 text-center">Manage Allocated Assets</h2>
+    <div class="overflow-x-auto">
+    <table class="w-full">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="p-2 text-center">Employee</th>
+                <th class="p-2 text-center">Asset</th>
+                <th class="p-2 text-center">Date</th>
+                <th class="p-2 text-center">Status</th>
+                <th class="p-2 text-center">Issues</th> 
+                <th class="p-2 text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in allocations %}
+            <tr class="border-t">
+                <td class="p-2 text-center">{{ row['first_name'] }} {{ row['last_name'] }}</td>
+                <td class="p-2 text-center">{{ row['ItemName'] }} - {{ row['Model'] }}</td>
+                <td class="p-2 text-center">{{ row['AllocateDate'] }}</td>
+                <td class="p-2 text-center">{{ row['Status'] }}</td>
+                <td class="p-2 text-center text-sm">
+                    {% if row['Issues'] %}
+                        <ul class="text-center list-disc list-inside">
+                            {% for issue in row['Issues'].split('||') %}
+                                {% set parts = issue.split('##') %}
+                                {% set issue_id = parts[0] %}
+                                {% set issue_text = parts[1] %}
+                                <li>
+                                    <span class="text-red-600">{{ issue_text }}</span>
+                                    <form method="POST" action="{{ url_for('resolve_issue', issue_id=issue_id) }}" class="mt-1">
+                                        <input type="text" name="resolved_comment" required
+                                            class="border text-sm p-1 rounded w-48" placeholder="Resolution comment">
+                                        <button type="submit"
+                                                class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 ml-1">
+                                            Mark Resolved
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        No issues
+                    {% endif %}
+                </td>
+                <td class="p-2 text-center">
+                    {% if row['Status'] == 'Allocated' %}
+                        <a href="{{ url_for('edit_allocation', alloc_id=row['AllocatedId']) }}" class="text-blue-600 hover:underline">Return</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

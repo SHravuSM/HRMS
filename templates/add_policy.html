@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Add Policy{% endblock %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Add New Policy</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="policyForm">
+                        <div class="mb-3">
+                            <label for="policy_name" class="form-label">Policy Name *</label>
+                            <input type="text" class="form-control" id="policy_name" name="policy_name" 
+                                   required maxlength="255" placeholder="Enter policy name">
+                            <div class="form-text">Maximum 255 characters</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="policy_file" class="form-label">Policy File *</label>
+                            <div class="drop-zone" id="dropZone">
+                                <input type="file" class="form-control" id="policy_file" name="policy_file" 
+                                       accept=".pdf" required style="display: none;">
+                                <div class="drop-zone-text">
+                                    <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+                                    <p>Click to select file or drag and drop</p>
+                                    <small class="text-muted">PDF files only, up to 16MB</small>
+                                </div>
+                            </div>
+                            <div id="fileInfo" class="mt-2" style="display: none;"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('list_policy') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="fas fa-upload"></i> Upload Policy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.drop-zone {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.drop-zone:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.drop-zone.dragover {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('policy_file');
+    const fileInfo = document.getElementById('fileInfo');
+    const form = document.getElementById('policyForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Click to select file
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag and drop functionality
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            displayFileInfo(files[0]);
+        }
+    });
+
+    // File selection
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            displayFileInfo(e.target.files[0]);
+        }
+    });
+
+    function displayFileInfo(file) {
+        if (file.type === 'application/pdf') {
+            fileInfo.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-file-pdf"></i> ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)
+                </div>
+            `;
+            fileInfo.style.display = 'block';
+        } else {
+            fileInfo.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Please select a PDF file only
+                </div>
+            `;
+            fileInfo.style.display = 'block';
+            fileInput.value = '';
+        }
+    }
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+
+{% endblock %}

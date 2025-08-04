@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{%block head%}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mx-auto bg-white shadow-md rounded-lg p-8 mt-10">
+    <h2 class="text-3xl font-bold  mb-8">My Profile</h2>
+    <!-- Profile Info -->
+    <div class="grid grid-cols-2 gap-4 text-sm text-gray-700 mb-6">
+        <div>
+            <strong>Full Name</strong>
+            <input readonly value='{{ employee[1] }} {{ employee[2] }}' class="w-full border p-2 rounded" />
+        </div>
+        <div>
+            <strong>Mobile No.</strong>
+            <input readonly value='{{ employee[6] }}' class="w-full border p-2 rounded" />
+        </div>
+        <div>
+            <strong>Login-Id</strong>
+            <input readonly value='{{ employee[7] }}' class="w-full border p-2 rounded" />
+        </div>
+        <div>
+            <strong>Designation</strong>
+            <input readonly value='{{ profile['Designation'] if profile else '' }}'
+                class="w-full border p-2 rounded" />
+        </div>
+        <div>
+            <strong>Reporting Manager</strong>
+            <input readonly value='{{ profile['ReportingMng'] if profile else '' }}'
+                class="w-full border p-2 rounded" />
+        </div>
+        <div>
+            <strong>Date of Joining</strong>
+            <input readonly value='{{ profile['DOJ'] if profile else '' }}'
+            class="w-full border p-2 rounded" />
+        </div>
+    </div>
+    <!-- Update Form -->
+    <form method="POST" class="space-y-6">
+        <!-- Password -->
+        <div>
+            <label class=" text-sm font-medium text-gray-700 mb-1">New Password</label>
+            <input required type="password" name="password"
+                class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <!-- Emergency Contact -->
+        <div>
+            <label class=" text-sm font-medium text-gray-700 mb-1">Emergency Contact (10-digit, can update only
+                once)</label>
+            <input type="text" required name="EmgContact" value="{{ profile['EmgContact'] if profile else '' }}" {% if
+                profile and profile['EmgUpdatedByEmp'] %} readonly
+                class="w-full p-2 border rounded-md bg-gray-100 text-gray-500" {% else %}
+                class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500" {% endif %} />
+
+            <small class="text-xs text-gray-500 mt-1 block">
+                {% if profile and profile['EmgUpdatedByEmp'] %}
+                You’ve already updated your emergency contact.
+                {% else %}
+                It must be a unique 10-digit number not equal to your mobile number.
+                {% endif %}
+            </small>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition">
+            Update
+        </button>
+    </form>
+</div>
+
+<script>
+    document.querySelector("form").addEventListener("submit", function (e) {
+        const mobile = "{{ employee[6] }}";
+        const emgInput = document.querySelector("input[name='EmgContact']");
+        const emgContact = emgInput.value.trim();
+
+        if (emgContact.length !== 10 || !/^\d{10}$/.test(emgContact)) {
+            e.preventDefault();
+            Toastify({
+                text: "Emergency contact must be a 10-digit number.",
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#f56565", // red
+            }).showToast();
+            return;
+        }
+
+        if (emgContact === mobile) {
+            e.preventDefault();
+            Toastify({
+                text: "Emergency contact number cannot be the same as your mobile number.",
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#f56565", // red
+            }).showToast();
+        }
+    });
+</script>
+{% endblock %}

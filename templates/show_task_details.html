@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Task Details - Project Tracking System{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Task Information Card -->
+    <div class="bg-white shadow rounded-lg mb-8">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="mb-8 flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-gray-900">Task Details</h1>
+                <a href="{{ url_for('admin_dashboard') }}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+            
+            <!-- Task Description -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium text-gray-500 mb-2">Task Description</h4>
+                <div class="prose prose-sm max-w-none text-gray-900" id="taskDescription"></div>
+            </div>
+
+            <!-- Other Task Information -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="flex items-center space-x-2">
+                    <h4 class="text-sm font-medium text-gray-500">Project:</h4>
+                    <p class="text-sm text-gray-900">{{ project[1] }}</p>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <h4 class="text-sm font-medium text-gray-500">Assigned To:</h4>
+                    <p class="text-sm text-gray-900">{{ employee[1] }} {{ employee[2] }}</p>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <h4 class="text-sm font-medium text-gray-500">Priority:</h4>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                        {% if task[4] == 'high' %}
+                            bg-red-100 text-red-800
+                        {% elif task[4] == 'medium' %}
+                            bg-yellow-100 text-yellow-800
+                        {% else %}
+                            bg-green-100 text-green-800
+                        {% endif %}">
+                        {{ task[4]|title }}
+                    </span>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <h4 class="text-sm font-medium text-gray-500">Status:</h4>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                        {% if task[5] == 'completed' %}
+                            bg-green-100 text-green-800
+                        {% elif task[5] == 'in_progress' %}
+                            bg-blue-100 text-blue-800
+                        {% else %}
+                            bg-gray-100 text-gray-800
+                        {% endif %}">
+                        {{ task[5]|replace('_', ' ')|title }}
+                    </span>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <h4 class="text-sm font-medium text-gray-500">Start Date:</h4>
+                    <p class="text-sm text-gray-900">{{ task[6] if task[6] else 'Not Set' }}</p>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <h4 class="text-sm font-medium text-gray-500">End Date:</h4>
+                    <p class="text-sm text-gray-900">{{ task[7] if task[7] else 'Not set' }}</p>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3 border-t border-gray-200 pt-6">
+                <a href="{{ url_for('edit_task', task_id=task[0]) }}"
+                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Edit Task
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Updates Section -->
+  <!-- Task Updates Section -->
+<div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4 text-left">Task Updates</h3>
+        {% if task_details %}
+        <div class="overflow-x-auto">
+            <table class="mx-auto w-full max-w-5xl table-auto border border-gray-200 text-sm text-left">
+                <thead class="bg-gray-100 text-xs uppercase font-semibold text-gray-600">
+                    <tr>
+                        <th class="px-4 py-2 border-b text-center">Description</th>
+                        <th class="px-4 py-2 border-b text-center">Status</th>
+                        <th class="px-4 py-2 border-b text-center">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for detail in task_details %}
+                    <tr>
+                        <td class="px-4 py-3 text-gray-700 align-top text-center">
+                            {{ detail[1]|safe }}
+                        </td>
+                        <td class="px-4 py-3 align-top text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if detail[3] == 'completed' %}bg-green-100 text-green-800
+                                {% elif detail[3] == 'in_progress' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ detail[3].replace('_', ' ').title() }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-500 align-top text-center">
+                            {{ detail[2] if detail[2] else 'Not set' }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-gray-500 italic">No updates available.</p>
+        {% endif %}
+    </div>
+</div>
+</div>
+
+<script>
+    // Safely render the task description HTML
+    document.getElementById('taskDescription').innerHTML = `{{ task[1]|safe }}`;
+</script>
+{% endblock %}

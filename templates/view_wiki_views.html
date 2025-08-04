@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Wiki Views{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+            {% for category, message in messages %}
+                <div class="px-4 py-2 rounded text-white
+                            {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+                {{ message }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+
+  <!-- PAGE HEADING -->
+  <div>
+    <h1 class="text-3xl font-bold mb-2">Wiki Views Report</h1>
+    <p class="text-gray-600">See who viewed each wiki page and when, with filterable summaries and details.</p>
+  </div>
+
+  <!-- FILTER CARD -->
+  <div class="bg-white shadow rounded-lg p-6 flex flex-wrap gap-4 items-end">
+    <div>
+      <label class="block text-sm font-medium">Start Date</label>
+      <input type="date" name="start_date" form="filterForm"
+             value="{{ filter_start }}"
+             class="mt-1 border rounded px-3 py-2">
+    </div>
+    <div>
+      <label class="block text-sm font-medium">End Date</label>
+      <input type="date" name="end_date" form="filterForm"
+             value="{{ filter_end }}"
+             class="mt-1 border rounded px-3 py-2">
+    </div>
+    <div class="flex-1 min-w-[200px]">
+      <label class="block text-sm font-medium">Wiki Page</label>
+      <select name="wiki_id" form="filterForm"
+              class="mt-1 block w-full border rounded px-3 py-2">
+        <option value="">All</option>
+        {% for p in pages %}
+        <option value="{{ p[0] }}"
+                {% if filter_wiki == p[0] %}selected{% endif %}>
+          {{ p[1] }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Filter Buttons -->
+    <form id="filterForm" method="get" action="{{ url_for('admin_wiki_views') }}" class="flex gap-2">
+      <button type="submit"
+              class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark">
+        Apply Filters
+      </button>
+      <a href="{{ url_for('admin_wiki_views') }}"
+         class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">
+        Reset Filters
+      </a>
+    </form>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    {% for c in counts %}
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+      <p class="text-sm font-medium text-blue-700 truncate">{{ c[1] }}</p>
+      <p class="mt-1 text-2xl font-semibold text-blue-900">{{ c[2] }}</p>
+      <p class="text-xs text-gray-500">Total Views</p>
+    </div>
+    {% endfor %}
+    {% if not counts %}
+    <p class="col-span-full text-center text-gray-500">No views in this range.</p>
+    {% endif %}
+  </div>
+
+  <!-- DETAILED TABLE -->
+  <div class="bg-white shadow rounded-lg overflow-x-auto">
+    <table class="min-w-full text-left text-sm">
+      <thead class="bg-gray-50 uppercase text-gray-500 text-xs">
+        <tr>
+          <th class="px-4 py-3">#</th>
+          <th class="px-4 py-3">Wiki Title</th>
+          <th class="px-4 py-3">Employee</th>
+          <th class="px-4 py-3">Viewed On</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {% for v in views %}
+        <tr>
+          <td class="px-4 py-3">{{ loop.index }}</td>
+          <td class="px-4 py-3">{{ v[1] }}</td>
+          <td class="px-4 py-3">{{ v[2] }}</td>
+          <td class="px-4 py-3">{{ v[3] }}</td>
+        </tr>
+        {% endfor %}
+        {% if not views %}
+        <tr>
+          <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+            No view records found.
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

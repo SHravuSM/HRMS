@@ -1,0 +1,110 @@
+<script type="text/javascript">
+  function validateFileType(input) {
+    console.log('validation');
+    const allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg'];
+    const file = input.files[0];
+
+    if (file) {
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+      if (!allowedExtensions.includes(fileExtension)) {
+        alert('Invalid file type. Please upload a PDF or image file (png, jpg, jpeg).');
+        input.value = ''; // Clear the file input
+      }
+    }
+  }
+  function confirmSubmit() {
+    const form = document.getElementById("myForm");
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return; // Exit early
+    }
+
+    if (confirm("Do you really want to submit?")) {
+      form.submit(); // Submit manually only if confirmed
+    }
+  }
+</script>
+{% extends "base.html" %}
+
+{% block title %}Expenses{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="mb-4">
+    {% for category, message in messages %}
+    <div class="px-4 py-2 rounded text-white
+                    {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold mb-6">Send Expense Request</h1>
+      </div>
+      <div class=" mb-4 text-sm text-blue-800 rounded-lg " role="alert">
+        <span class="font-medium">Note: Expense requests should be submitted only for costs incurred during official
+          travel for training sessions or other office-related activities. All claims must be supported by valid
+          receipts and must be clearly associated with official work.</span>
+      </div>
+      <form method="POST" enctype="multipart/form-data" id="myForm">
+        <div>
+          <label class="block mb-1 text-sm font-medium">Expense Type</label>
+          <select name="expense_type_id" required class="w-full border px-3 py-2 rounded-md">
+            <option value="" disabled selected>Select type</option>
+            {% for t in types %}
+            <option value="{{ t[0] }}">{{ t[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-1 text-sm font-medium">Expense Date (Spent on actual date)</label>
+          <input type="date" name="expense_date" required class="w-full border px-3 py-2 rounded-md" />
+        </div>
+
+        {% if session['emp_type'] == 'admin' %}
+        <div>
+          <label class="block mb-1 text-sm font-medium">Select Employee</label>
+          <select name="employee_id" required class="w-full border px-3 py-2 rounded-md">
+            <option value="" disabled selected>Select employee</option>
+            {% for emp in employees %}
+            <option value="{{ emp[0] }}">{{ emp[1] }} {{ emp[2] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <div>
+          <label class="block mb-1 text-sm font-medium">Description (max 500)</label>
+          <textarea name="exp_description" maxlength="500" rows="3" class="w-full border px-3 py-2 rounded-md"
+            required></textarea>
+        </div>
+
+        <div>
+          <label class="block mb-1 text-sm font-medium">Amount</label>
+          <input type="number" name="amount" min="0" step="0.01" required class="w-full border px-3 py-2 rounded-md" />
+        </div>
+
+        <div>
+          <label class="block mb-1 text-sm font-medium">Upload Invoice (PDF/Image)</label>
+          <input type="file" id="invoice_file" name="invoice_file" accept=".pdf,.png,.jpg,.jpeg"
+            onchange="validateFileType(this);" class="w-full border px-3 py-2 rounded-md">
+        </div>
+        <div>
+          <br>
+          <button type="button" class="bg-primary text-white px-5 py-2 rounded-md"
+            onclick="confirmSubmit();">Submit</button>
+        </div>
+      </form>
+
+      <!-- Remove the Existing Expenses table from here -->
+
+    </div>
+  </div>
+</div>
+{% endblock %}

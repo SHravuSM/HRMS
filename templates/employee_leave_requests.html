@@ -1,0 +1,70 @@
+{% extends "base.html" %} {% block title %}My Leave Requests{% endblock %} {%
+block content %}
+<div class="bg-white shadow rounded-lg">
+  <div class="">
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="mb-4">
+      {% for category, message in messages %}
+      <div class="px-4 py-2 rounded text-white
+                    {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+  </div>
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900 text-left pt-4 ml-8">
+      My Leave Request
+    </h1>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white rounded-md shadow text-sm">
+      <thead class="bg-gray-50 text-left uppercase text-xs font-medium text-gray-500">
+        <tr>
+          <th class="px-4 py-3">Type</th>
+          <th class="px-4 py-3">Dates</th>
+          <th class="px-4 py-3">Days</th>
+          <th class="px-4 py-3">Status</th>
+          <th class="px-4 py-3">Manager Comments</th>
+          {% for r in my_requests %}
+          {% if r[6] == 'pending' %}
+          <th class="px-4 py-3">Delete</th>
+          {% endif %}
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {% for r in my_requests %} {% set days = (r[4]|todate -
+        r[3]|todate).days + 1 %}
+        <tr>
+          <td class="px-4 py-3">{{ r[1] }}</td>
+          <td class="px-4 py-3">{{ r[3] }} → {{ r[4] }}</td>
+          <td class="px-4 py-3">{{ days }}</td>
+          <td class="px-4 py-3" style="text-transform: capitalize">
+            {{ r[6] }}
+          </td>
+          <td class="px-1 py-3">{{ r[7] or 'Comment will be shown here' }}</td>
+          <td class="px-4 py-3">
+            {% if r[6] == 'pending' %}
+            <form method="POST" action="{{ url_for('delete_leave_request', request_id=r[0]) }}">
+              <button type="submit" class="btn text-red-500 btn-danger btn-sm">
+                Delete
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="px-4 py-6 text-center text-gray-500">
+            No leave requests found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

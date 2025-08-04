@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Add Task Update - Project Tracking System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-2">
+    
+    <div class="bg-white shadow rounded-lg">
+        <div class="mt-2">
+            <h1 class="text-3xl font-bold text-gray-900 text-center pt-2">Add Task Update</h1>
+        </div>
+        <div class="px-4 py-5 sm:p-6">
+            <form method="POST" class="space-y-6" id="updateForm">
+                <div class="space-y-6">
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select name="status" id="status" required
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="">Select Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="update_desc" class="block text-sm font-medium text-gray-700 mb-2">Update Description</label>
+                        <!-- Quill editor toolbar -->
+                        <div id="toolbar" class="rounded-t-md border border-gray-300">
+                            <button class="ql-bold"></button>
+                            <button class="ql-italic"></button>
+                            <button class="ql-underline"></button>
+                            <button class="ql-strike"></button>
+                            <select class="ql-color">
+                                <option value="red"></option>
+                                <option value="green"></option>
+                                <option value="blue"></option>
+                                <option value="orange"></option>
+                                <option value="violet"></option>
+                                <option value="#d0d1d2"></option>
+                            </select>
+                            <select class="ql-background">
+                                <option value="red"></option>
+                                <option value="green"></option>
+                                <option value="blue"></option>
+                                <option value="yellow"></option>
+                                <option value="pink"></option>
+                                <option value="#d0d1d2"></option>
+                            </select>
+                            <button class="ql-blockquote"></button>
+                            <button class="ql-code-block"></button>
+                            <button class="ql-list" value="ordered"></button>
+                            <button class="ql-list" value="bullet"></button>
+                            <button class="ql-script" value="sub"></button>
+                            <button class="ql-script" value="super"></button>
+                        </div>
+                        <!-- Hidden textarea for form submission -->
+                        <textarea name="update_desc" id="update_desc" style="display: none"></textarea>
+                        <!-- Quill editor container -->
+                        <div id="editor" class="mt-1 block w-full border border-gray-300 rounded-b-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" style="height: 200px;"></div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                    <a href="{{ url_for('view_task_details', task_id=task_id) }}"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Add Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize Quill editor
+    var quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: '#toolbar'
+        }
+    });
+
+    // Update hidden textarea before form submission
+    document.getElementById('updateForm').onsubmit = function() {
+        document.getElementById('update_desc').value = quill.root.innerHTML;
+        return true;
+    };
+</script>
+{% endblock %}

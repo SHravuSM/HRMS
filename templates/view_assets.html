@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}View Assets{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto bg-white shadow rounded-lg p-6">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+            {% for category, message in messages %}
+                <div class="px-4 py-2 rounded text-white
+                            {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+                {{ message }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+    
+    <h2 class="text-2xl font-bold mb-6 text-center">Asset List</h2>
+    <div class="overflow-x-auto">
+    <table class="w-full border-collapse">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="p-2 text-center">Item Name</th>
+                <th class="p-2 text-center">Model</th>
+                <th class="p-2 text-center">Price</th>
+                <th class="p-2 text-center">Status</th>
+                <th class="p-2 text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asset in assets %}
+            <tr class="border-t">
+                <td class="p-2 text-center">{{ asset['ItemName'] }}</td>
+                <td class="p-2 text-center">{{ asset['Model'] }}</td>
+                <td class="p-2 text-center">{{ asset['Price'] }}</td>
+                <td class="p-2 text-center">{{ asset['Status'] }}</td>
+                <td class="p-2 space-x-2 text-center">
+                    {% if asset['Status'] == 'Available' %}
+                        <a href="{{ url_for('allocate_asset', asset_id=asset['AssetId']) }}"
+                        class="text-blue-600 hover:underline text">View</a>
+                    {% else %}
+                        <span class="text-gray-400 cursor-not-allowed text">View</span>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('edit_asset', asset_id=asset['AssetId']) }}" class="text-yellow-600 hover:underline text">Edit</a>
+
+                    <a href="{{ url_for('delete_asset', asset_id=asset['AssetId']) }}"
+                    class="text-red-600 hover:underline text"
+                    onclick="return confirm('Delete this asset?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

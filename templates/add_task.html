@@ -1,0 +1,174 @@
+{# templates/add_task.html #}
+{% extends "base.html" %}
+
+{% block title %}Add Task - Project Tracking System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-2">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+            {% for category, message in messages %}
+                <div class="px-4 py-2 rounded text-white
+                            {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+                {{ message }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+
+    <div class="bg-white shadow rounded-lg">
+        <div class="mt-2">
+            <h1 class="text-3xl font-bold text-gray-900 text-left ml-8 pt-4">Add New Task</h1>
+        </div>
+
+        <div class="px-4 py-5 sm:p-6">
+            <!-- all client-side validation disabled -->
+            <form method="POST" class="space-y-6" id="taskForm" novalidate>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Project -->
+                    <div>
+                        <label for="project_id" class="block text-sm font-medium text-gray-700">Project</label>
+                        <select name="project_id" id="project_id"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="">Select Project</option>
+                            {% for project in projects %}
+                            <option value="{{ project[0] }}">{{ project[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Employee -->
+                    <div>
+                        <label for="emp_id" class="block text-sm font-medium text-gray-700">Assign to Employee</label>
+                        <select name="emp_id" id="emp_id"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="">Select Employee</option>
+                            {% for employee in employees %}
+                            {% if employee[9] == 'emp' and employee[8] == 'active' %}
+                            <option value="{{ employee[0] }}">{{ employee[1] }} {{ employee[2] }} ({{ employee[6] }})</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Task Description -->
+                    <div class="md:col-span-2">
+                        <label for="task_desc" class="block text-sm font-medium text-gray-700 mb-2">Task Description</label>
+
+                        <!-- Quill toolbar -->
+                        <div id="toolbar" class="rounded-t-md border border-gray-300">
+                            <button class="ql-bold"></button>
+                            <button class="ql-italic"></button>
+                            <button class="ql-underline"></button>
+                            <button class="ql-strike"></button>
+                            <select class="ql-color">
+                                <option value="red"></option>
+                                <option value="green"></option>
+                                <option value="blue"></option>
+                                <option value="orange"></option>
+                                <option value="violet"></option>
+                                <option value="#d0d1d2"></option>
+                            </select>
+                            <select class="ql-background">
+                                <option value="red"></option>
+                                <option value="green"></option>
+                                <option value="blue"></option>
+                                <option value="yellow"></option>
+                                <option value="pink"></option>
+                                <option value="#d0d1d2"></option>
+                            </select>
+                            <button class="ql-blockquote"></button>
+                            <button class="ql-code-block"></button>
+                            <button class="ql-list" value="ordered"></button>
+                            <button class="ql-list" value="bullet"></button>
+                            <button class="ql-script" value="sub"></button>
+                            <button class="ql-script" value="super"></button>
+                        </div>
+
+                        <!-- hidden textarea submitted to server -->
+                        <textarea name="task_desc" id="task_desc" style="display:none"></textarea>
+
+                        <!-- Quill editor -->
+                        <div id="editor"
+                             class="mt-1 block w-full border border-gray-300 rounded-b-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                             style="height:200px;"></div>
+                    </div>
+
+                    <!-- Priority -->
+                    <div>
+                        <label for="priority" class="block text-sm font-medium text-gray-700">Priority</label>
+                        <select name="priority" id="priority"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="">Select Priority</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select name="status" id="status"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="">Select Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="pending_review">Pending Review</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <!-- Start Date -->
+                    <div>
+                        <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                        <input type="date" name="start_date" id="start_date"
+                            value="{{ today }}"
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+
+                    <!-- End Date -->
+                    <div>
+                        <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
+                        <input type="date" name="end_date" id="end_date"
+                            value="{{ today }}"
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                    <a href="{{ url_for('admin_dashboard') }}"
+                       class="bg-red-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-200">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="bg-green-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-200">
+                        <i class="fas fa-save mr-2"></i>
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    /* Quill setup (not a validation) */
+    const quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: { toolbar: '#toolbar' }
+    });
+
+    /* Copy Quill content to textarea on submit */
+    document.getElementById('taskForm').addEventListener('submit', () => {
+        document.getElementById('task_desc').value = quill.root.innerHTML;
+    });
+
+    /* any date-range restrictions were removed */
+</script>
+{% endblock %}

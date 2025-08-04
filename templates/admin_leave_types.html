@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Leave Types{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-2">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-4">
+          {% for category, message in messages %}
+            <div class="px-4 py-2 rounded text-white
+                        {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+  <div class="bg-white shadow rounded-lg">
+
+    <!-- Modal Alert Box -->
+    {% if popup_message %}
+    <div id="popupAlert" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 rounded-lg shadow-lg
+                 {{ 'bg-green-100 text-green-800' if popup_type == 'success' else 'bg-red-100 text-red-800' }}">
+      <div class="flex justify-between items-center">
+        <p class="font-semibold">{{ popup_message }}</p>
+        <button onclick="document.getElementById('popupAlert').remove();" class="ml-4 font-bold text-lg">&times;</button>
+      </div>
+    </div>
+    <script>
+      setTimeout(() => {
+        const alertBox = document.getElementById('popupAlert');
+        if (alertBox) alertBox.remove();
+      }, 4000);
+    </script>
+    {% endif %}
+
+    <!-- Heading -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 pt-4 px-8 text-left">Leave Types</h1>
+    </div>
+
+    <!-- Add Form -->
+    <div class="px-4 py-5 sm:p-6">
+      <form method="POST" class="flex gap-3 mb-6">
+        <input name="leave_type" maxlength="50" required
+              class="flex-1 border rounded-md px-3 py-2"
+              placeholder="New leave type"
+              value="{{ edit_type[1] if edit_type else '' }}">
+        {% if edit_type %}
+          <input type="hidden" name="leave_type_id" value="{{ edit_type[0] }}">
+          <button class="bg-yellow-500 text-white px-4 py-2 rounded-md">Update</button>
+          <a href="{{ url_for('admin_leave_types') }}"
+            class="bg-gray-400 text-white px-4 py-2 rounded-md ml-2">Cancel</a>
+        {% else %}
+          <button class="bg-primary text-white px-4 py-2 rounded-md">Add</button>
+        {% endif %}
+      </form>
+
+      <!-- Leave Types Table -->
+      <table class="min-w-full bg-white rounded-md shadow">
+        <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">
+          <tr>
+            <th class="px-4 py-3 text-center">S.No.</th>
+            <th class="px-4 py-3 text-center">Leave Type</th>
+            <th class="px-4 py-3 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y">
+          {% for lt in leave_types %}
+          <tr>
+            <td class="px-4 py-3 text-center">{{ loop.index }}</td>
+            <td class="px-4 py-3 text-center">{{ lt[1] }}</td>
+            <td class="px-4 py-3 text-center">
+              <a href="{{ url_for('admin_leave_types') }}?edit_id={{ lt[0] }}"
+                class="text-blue-600 hover:underline mr-4">Edit</a>
+              <a href="{{ url_for('delete_leave_type', lt_id=lt[0]) }}"
+                onclick="return confirm('Delete {{ lt[1] }}?')"
+                class="text-red-600 hover:underline">Delete</a>
+            </td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

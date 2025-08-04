@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Leave Management{% endblock %}
+{% block content %}
+<div class="bg-white shadow rounded-lg">
+  <div class="mb-4">
+    <h1 class="text-3xl font-bold text-gray-900 text-left pt-4 ml-8">Apply for Leave</h1>
+  </div>
+  <div class="px-4 py-5 sm:p-6">
+    <form method="POST" class="space-y-4 mb-10 bg-white p-6 rounded-lg" id="myForm">
+      <div>
+        <label class="block mb-1 text-sm font-medium">Leave Type</label>
+        <select name="leave_type_id" required class="w-full border px-3 py-2 rounded-md">
+          <option value="" disabled selected>Select type</option>
+          {% for lt in leave_types %}
+          <option value="{{ lt[0] }}">{{ lt[1] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block mb-1 text-sm font-medium">Start date</label>
+          <input type="date" name="start_date" id="startDate" value="{{ today }}" required
+            class="w-full border px-3 py-2 rounded-md">
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium">End date</label>
+          <input type="date" name="end_date" id="endDate" value="{{ today }}" required
+            class="w-full border px-3 py-2 rounded-md">
+        </div>
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm font-medium">Number of days</label>
+        <input type="text" id="numDays" readonly class="w-full border px-3 py-2 rounded-md bg-gray-50">
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm font-medium">Description (max 500)</label>
+        <textarea required name="leave_desc" maxlength="500" rows="3" class="w-full border px-3 py-2 rounded-md"></textarea>
+      </div>
+
+      <button class="bg-primary text-white px-5 py-2 rounded-md" onclick="confirmSubmit();" type="button">Submit</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  function calcDays() {
+    const s = document.getElementById('startDate').value;
+    const e = document.getElementById('endDate').value;
+    if (s && e) {
+      const diff = (new Date(e) - new Date(s)) / 86400000 + 1;
+      document.getElementById('numDays').value = diff > 0 ? diff : 0;
+    }
+  }
+  ['startDate', 'endDate'].forEach(id => {
+    document.getElementById(id).addEventListener('change', calcDays);
+  });
+  window.addEventListener('DOMContentLoaded', calcDays);
+
+  function confirmSubmit() {
+    const form = document.getElementById("myForm");
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return; // Exit early
+    }
+
+    if (confirm("Are you sure you want to send leave request?")) {
+      form.submit(); // Submit manually only if confirmed
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Add Employee - Project Tracking System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-2">
+    <div class="bg-white shadow rounded-lg">
+        <div class="mt-2">
+            <h1 class="text-3xl font-bold text-gray-900 text-center pt-4">Add New Employee</h1>
+        </div>
+        <div class="px-4 py-5 sm:p-6">
+            <form method="POST" class="space-y-6" id="employeeForm" onsubmit="return validateForm(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>
+                        <input type="text" name="first_name" id="first_name" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                               pattern="[A-Za-z\s]{2,50}"
+                               title="First name must be 2-50 characters long and contain only letters and spaces">
+                        <p class="text-red-500 text-xs mt-1 hidden error-message" id="first_name_error">First name must be 2-50 characters long and contain only letters and spaces</p>
+                    </div>
+
+                    <div>
+                        <label for="last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
+                        <input type="text" name="last_name" id="last_name" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                               pattern="[A-Za-z\s]{2,50}"
+                               title="Last name must be 2-50 characters long and contain only letters and spaces">
+                        <p class="text-red-500 text-xs mt-1 hidden error-message" id="last_name_error">Last name must be 2-50 characters long and contain only letters and spaces</p>
+                    </div>
+
+                    <div>
+                        <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
+                        <select name="gender" id="gender" required
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <p class="text-red-500 text-xs mt-1 hidden error-message" id="gender_error">Please select a gender</p>
+                    </div>
+
+                    <div>
+                        <label for="dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                        <input type="date" name="dob" id="dob" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                        <p class="text-red-500 text-xs mt-1 hidden error-message" id="dob_error">Employee must be at least 18 years old</p>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+                        <textarea name="address" id="address" rows="3" required
+                                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                  minlength="10" maxlength="200"></textarea>
+                        <p class="text-red-500 text-xs mt-1 hidden error-message" id="address_error">Address must be 10-200 characters long</p>
+                    </div>
+
+                    <div>
+                        <label for="phone_no" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input type="tel" name="phone_no" id="phone_no" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                               pattern="[0-9]{10,15}"
+                               title="Phone number must be 10-15 digits">
+                        <p class="text-red-500 text-xs mt-1 hidden error-message" id="phone_no_error">Phone number must be 10-15 digits</p>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                        <input type="email" name="email" id="email" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                               pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}">
+                        <p class="text-red-500 text-xs mt-1 hidden error-message" id="email_error">Please enter a valid email address</p>
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" name="password" id="password" required
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                               pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                               title="Password must be at least 8 characters long, including one uppercase letter, one lowercase letter, one number, and one special character">
+                        <p class="text-red-500 text-xs mt-1 hidden error-message" id="password_error">Password must be at least 8 characters long, including one uppercase letter, one lowercase letter, one number, and one special character</p>
+                    </div>
+
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select name="status" id="status" required
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        <p class="text-red-500 text-xs mt-1 hidden error-message" id="status_error">Please select a status</p>
+                    </div>
+
+                    <div>
+                        <label for="emp_type" class="block text-sm font-medium text-gray-700">Employee Type</label>
+                        <select name="emp_type" id="emp_type" required
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="emp">Employee</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <p class="text-red-500 text-xs mt-1 hidden error-message" id="emp_type_error">Please select an employee type</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                    <a href="{{ url_for('admin_dashboard') }}"
+                       class="bg-red-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-200">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="bg-green-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-200">
+                        <i class="fas fa-save mr-2"></i>
+                        Save
+                    </button>
+                </div>
+                    
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function validateForm(event) {
+    event.preventDefault();
+    let isValid = true;
+    
+    // Reset all error messages
+    document.querySelectorAll('.error-message').forEach(error => error.classList.add('hidden'));
+    document.querySelectorAll('input, select, textarea').forEach(input => input.classList.remove('border-red-500'));
+
+    // First Name validation
+    const firstName = document.getElementById('first_name');
+    if (!firstName.value.match(/^[A-Za-z\s]{2,50}$/)) {
+        document.getElementById('first_name_error').classList.remove('hidden');
+        firstName.classList.add('border-red-500');
+        isValid = false;
+    }
+
+    // Last Name validation
+    const lastName = document.getElementById('last_name');
+    if (!lastName.value.match(/^[A-Za-z\s]{2,50}$/)) {
+        document.getElementById('last_name_error').classList.remove('hidden');
+        lastName.classList.add('border-red-500');
+        isValid = false;
+    }
+
+    // Gender validation
+    const gender = document.getElementById('gender');
+    if (!gender.value) {
+        document.getElementById('gender_error').classList.remove('hidden');
+        gender.classList.add('border-red-500');
+        isValid = false;
+    }
+
+    // Date of Birth validation (must be at least 18 years old)
+    const dob = document.getElementById('dob');
+    const dobDate = new Date(dob.value);
+    const today = new Date();
+    const minAgeDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+    if (!dob.value || dobDate > minAgeDate) {
+        document.getElementById('dob_error').classList.remove('hidden');
+        dob.classList.add('border-red-500');
+        isValid = false;
+    }
+
+    // Address validation
+    const address = document.getElementById('address');
+    if (address.value.length < 10 || address.value.length > 200) {
+        document.getElementById('address_error').classList.remove('hidden');
+        address.classList.add('border-red-500');
+        isValid = false;
+    }
+
+    // Phone Number validation
+    const phoneNo = document.getElementById('phone_no');
+    if (!phoneNo.value.match(/^[0-9]{10,15}$/)) {
+        document.getElementById('phone_no_error').classList.remove('hidden');
+        phoneNo.classList.add('border-red-500');
+        isValid = false;
+    }
+
+    // Email validation
+    const email = document.getElementById('email');
+    if (!email.value.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+        document.getElementById('email_error').classList.remove('hidden');
+        email.classList.add('border-red-500');
+        isValid = false;
+    }
+
+    // Password validation
+    const password = document.getElementById('password');
+    if (!password.value.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)) {
+        document.getElementById('password_error').classList.remove('hidden');
+        password.classList.add('border-red-500');
+        isValid = false;
+    }
+
+    // Status validation
+    const status = document.getElementById('status');
+    if (!status.value) {
+        document.getElementById('status_error').classList.remove('hidden');
+        status.classList.add('border-red-500');
+        isValid = false;
+    }
+
+    // Employee Type validation
+    const empType = document.getElementById('emp_type');
+    if (!empType.value) {
+        document.getElementById('emp_type_error').classList.remove('hidden');
+        empType.classList.add('border-red-500');
+        isValid = false;
+    }
+
+    if (isValid) {
+        document.getElementById('employeeForm').submit();
+    }
+    return isValid;
+}
+</script>
+{% endblock %}

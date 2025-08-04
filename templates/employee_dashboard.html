@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Dashboard - Project Tracking System{% endblock %}
+
+{% block content %}
+{% if emg_missing %}
+<div class="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 mb-6 rounded-md shadow-sm" role="alert">
+    <p class="font-semibold text-lg mb-1"><i class="fa fa-exclamation-triangle mr-2"></i>Action Required</p>
+    <p class="text-sm">Please update your emergency contact in <strong>My Profile</strong>. Other sections will remain locked until this is completed.</p>
+</div>
+{% endif %}
+
+<div class="max-w-6xl bg-white mx-auto px-6 py-8">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="mb-4">
+      {% for category, message in messages %}
+        <div class="px-4 py-2 rounded text-white
+                    {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+    <h2 class="text-3xl font-bold text-gray-800 mb-1">Welcome, {{ session.first_name }}</h2>
+    <p class="text-gray-500 mb-8 text-sm">Review your current assignments and task history.</p>
+
+    <!-- Filter -->
+    <form method="GET" class="mb-8">
+        <div class="flex flex-wrap items-center gap-3">
+            <label for="status_filter" class="font-medium text-gray-700">Filter by Status:</label>
+            <select name="status_filter" id="status_filter"
+                class="border border-gray-300 rounded-md px-4 py-2 text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                onchange="this.form.submit()">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+        </div>
+    </form>
+
+    <!-- Today's Tasks -->
+    <div class="bg-white shadow-lg rounded-xl mb-10">
+        <div class="bg-gray-100 px-6 py-4 border-b rounded-t-xl flex items-center">
+            <i class="fa fa-calendar-alt mr-2 text-blue-600"></i>
+            <h3 class="text-xl font-semibold text-gray-800">Today's Tasks</h3>
+        </div>
+        <div class="p-6">
+            {% if tasks %}
+                {% set today_tasks = [] %}
+                {% for task in tasks %}
+                    {% set start_date = task[4]|todate if task[4] and task[4]|string != '' else None %}
+                    {% set end_date = task[5]|todate if task[5] and task[5]|string != '' else None %}
+                    {% if start_date and start_date <= today and (not end_date or end_date >= today) %}
+                        {% set _ = today_tasks.append(task) %}
+                    {% endif %}
+                {% endfor %}
+                {% if today_tasks %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for task in today_tasks %}
+                        <div class="border border-gray-200 rounded-lg p-5 mb-5 hover:shadow transition duration-150">
+                            <h4 class="text-lg font-semibold text-blue-700">{{ task[1]|safe }}</h4>
+                            <div class="text-sm text-gray-600 mt-2 space-y-1">
+                                <p><i class="fa fa-folder mr-1"></i><strong>Project:</strong> {{ task[6] }}</p>
+                                <p><i class="fa fa-calendar mr-1"></i><strong>Dates:</strong> {{ task[4] if task[4] else 'Not Set' }} - {{ task[5] if task[5] else 'Ongoing' }}</p>
+                                <p><i class="fa fa-bolt mr-1"></i><strong>Priority:</strong> {{ task[2].title() }}</p>
+                                <p><i class="fa fa-thumbtack mr-1"></i><strong>Status:</strong> {{ task[3].replace('_', ' ').title() }}</p>
+                            </div>
+                            <a href="{{ url_for('view_task_details', task_id=task[0]) }}"
+                               class="inline-block mt-4 text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition"><i class="fa fa-eye mr-2"></i>View Updates</a>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                    <p class="text-gray-500 text-sm">No tasks assigned for today.</p>
+                {% endif %}
+            {% else %}
+                <p class="text-gray-500 text-sm">No tasks assigned.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Previous Tasks -->
+    <div class="bg-white shadow-lg rounded-xl">
+        <div class="bg-gray-100 px-6 py-4 border-b rounded-t-xl flex items-center">
+            <i class="fa fa-archive mr-2 text-blue-600"></i>
+            <h3 class="text-xl font-semibold text-gray-800">Previous Tasks</h3>
+        </div>
+        <div class="p-6">
+            {% if tasks %}
+                {% set previous_tasks = [] %}
+                {% for task in tasks %}
+                    {% set start_date = task[4]|todate if task[4] and task[4]|string != '' else None %}
+                    {% set end_date = task[5]|todate if task[5] and task[5]|string != '' else None %}
+                    {% if start_date and not (start_date <= today and (not end_date or end_date >= today)) %}
+                        {% set _ = previous_tasks.append(task) %}
+                    {% endif %}
+                {% endfor %}
+                {% if previous_tasks %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for task in previous_tasks %}
+                        <div class="border border-gray-200 rounded-lg p-5 mb-5 hover:shadow transition duration-150">
+                            <h4 class="text-lg font-semibold text-gray-700">{{ task[1]|safe }}</h4>
+                            <div class="text-sm text-gray-600 mt-2 space-y-1">
+                                <p><i class="fa fa-folder mr-1"></i><strong>Project:</strong> {{ task[6] }}</p>
+                                <p><i class="fa fa-calendar mr-1"></i><strong>Dates:</strong> {{ task[4] if task[4] else 'Not Set' }} - {{ task[5] if task[5] else 'Ongoing' }}</p>
+                                <p><i class="fa fa-bolt mr-1"></i><strong>Priority:</strong> {{ task[2].title() }}</p>
+                                <p><i class="fa fa-thumbtack mr-1"></i><strong>Status:</strong> {{ task[3].replace('_', ' ').title() }}</p>
+                            </div>
+                            <a href="{{ url_for('view_task_details', task_id=task[0]) }}"
+                               class="inline-block mt-4 text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition"><i class="fa fa-eye mr-2"></i>View Updates</a>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                    <p class="text-gray-500 text-sm">No previous tasks found.</p>
+                {% endif %}
+            {% else %}
+                <p class="text-gray-500 text-sm">No previous tasks assigned.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

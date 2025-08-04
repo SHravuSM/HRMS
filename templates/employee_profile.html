@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Employee Profile{% endblock %}
+
+{% block content %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="mb-4">
+      {% for category, message in messages %}
+        <div class="px-4 py-2 rounded text-white
+                    {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="max-w-4xl mx-auto bg-white p-6 shadow rounded mt-8">
+    <h2 class="text-2xl font-bold mb-6 text-center">Employee Profile - {{ employee[1] }} {{ employee[2] }}</h2>
+
+    <form method="POST">
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">UAN No</label>
+                <input type="text" name="UANNo" value="{{ profile['UANNo'] if profile else '' }}" class="w-full mt-1 border rounded p-2" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">PAN No</label>
+                <input type="text" name="PANNO" value="{{ profile['PANNO'] if profile else '' }}" class="w-full mt-1 border rounded p-2" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Aadhar No</label>
+                <input type="text" name="AadharNo" value="{{ profile['AadharNo'] if profile else '' }}" class="w-full mt-1 border rounded p-2" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Bank Name</label>
+                <input type="text" name="BankName" value="{{ profile['BankName'] if profile else '' }}" class="w-full mt-1 border rounded p-2" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Branch Name</label>
+                <input type="text" name="BranchName" value="{{ profile['BranchName'] if profile else '' }}" class="w-full mt-1 border rounded p-2" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Account No</label>
+                <input type="text" name="ACNo" value="{{ profile['ACNo'] if profile else '' }}" class="w-full mt-1 border rounded p-2" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">IFSC Code</label>
+                <input type="text" name="IFSCode" value="{{ profile['IFSCode'] if profile else '' }}" class="w-full mt-1 border rounded p-2" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Designation</label>
+                <input type="text" name="Designation" value="{{ profile['Designation'] if profile else '' }}" class="w-full mt-1 border rounded p-2" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Emergency Contact</label>
+                <input type="text" name="EmgContact" value="{{ profile['EmgContact'] if profile else '' }}" class="w-full mt-1 border rounded p-2" required />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Reporting Manager</label>
+                <select name="ReportingMng" class="w-full mt-1 border rounded p-2">
+                    <option value="Akshay" {% if profile and profile['ReportingMng'] == 'Akshay' %}selected{% endif %}>Akshay</option>
+                    <option value="Kumar" {% if profile and profile['ReportingMng'] == 'Kumar' %}selected{% endif %}>Kumar</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Date of Joining</label>
+                <input type="date" name="DOJ" value="{{ profile['DOJ'] if profile else '' }}" class="w-full mt-1 border rounded p-2" />
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <label class="block text-sm font-medium text-gray-700">Programming Languages</label>
+            <textarea name="PrgLng" rows="3" class="w-full mt-1 border rounded p-2">{{ profile['PrgLng'] if profile else '' }}</textarea>
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700">Frameworks</label>
+            <textarea name="FrmWrk" rows="3" class="w-full mt-1 border rounded p-2">{{ profile['FrmWrk'] if profile else '' }}</textarea>
+        </div>
+
+        <div class="mt-6 text-center">
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                {% if profile %}Update{% else %}Submit{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

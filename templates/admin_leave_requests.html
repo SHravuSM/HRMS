@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}Leave Requests{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-2">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="mb-4">
+    {% for category, message in messages %}
+    <div class="px-4 py-2 rounded text-white
+                        {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+
+      <h1 class="text-3xl font-bold text-gray-900 pt-4 text-left mb-6">Leave Requests</h1>
+
+
+      <!-- Filters -->
+      <form method="get" class="mb-6 flex flex-wrap items-end gap-3">
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Employee</label>
+          <select name="employee" class="border px-2 py-1 rounded">
+            <option value="">All</option>
+            {% for emp in employees %}
+            <option value="{{ emp[0] }}" {% if request.args.get('employee')==emp[0]|string %}selected{% endif %}>
+              {{ emp[1] }} {{ emp[2] }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Leave Type</label>
+          <select name="type" class="border px-2 py-1 rounded">
+            <option value="">All</option>
+            {% for lt in leave_types %}
+            <option value="{{ lt[0] }}" {% if request.args.get('type')==lt[0]|string %}selected{% endif %}>
+              {{ lt[1] }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">From Date</label>
+          <input type="date" name="from_date" value="{{ request.args.get('from_date', '') }}"
+            class="border px-2 py-1 rounded">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">To Date</label>
+          <input type="date" name="to_date" value="{{ request.args.get('to_date', '') }}"
+            class="border px-2 py-1 rounded">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Status</label>
+          <select name="status" class="border px-2 py-1 rounded">
+            <option value="">All</option>
+            <option value="pending" {% if request.args.get('status')=='pending' %}selected{% endif %}>Pending</option>
+            <option value="approved" {% if request.args.get('status')=='approved' %}selected{% endif %}>Approved
+            </option>
+            <option value="rejected" {% if request.args.get('status')=='rejected' %}selected{% endif %}>Rejected
+            </option>
+          </select>
+        </div>
+
+        <div class="flex gap-2 items-center mt-6">
+          <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">Filter</button>
+          <a href="{{ url_for('admin_leave_requests') }}" class="bg-gray-400 text-white px-4 py-1 rounded">Reset</a>
+        </div>
+
+      </form>
+
+      <div class="overflow-x-auto">
+        <!-- Table -->
+        <table class="min-w-full bg-white rounded-md shadow text-sm">
+          <thead class="bg-gray-50 text-left uppercase text-xs font-medium text-gray-500">
+            <tr>
+              <th class="px-4 py-3">Employee</th>
+              <th class="px-4 py-3">Type</th>
+              <th class="px-4 py-3">Dates</th>
+              <th class="px-4 py-3">Days</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            {% for r in requests %}
+            {% set days = (r[4]|todate - r[3]|todate).days + 1 %}
+            <tr>
+              <td class="px-4 py-3">{{ r[2] }}</td>
+              <td class="px-4 py-3">{{ r[1] }}</td>
+              <td class="px-4 py-3">{{ r[3] }} → {{ r[4] }}</td>
+              <td class="px-4 py-3">{{ days }}</td>
+              <td class="px-4 py-3">
+                <span class="px-2 py-0.5 rounded-full text-xs
+                {% if r[6] == 'approved' %}bg-green-100 text-green-800
+                {% elif r[6] == 'rejected' %}bg-red-100 text-red-800
+                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                  {{ r[6] }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <button class="view-btn text-blue-600 hover:underline" data-id="{{ r[0] }}" data-emp="{{ r[2] }}"
+                  data-type="{{ r[1] }}" data-dates="{{ r[3] }} → {{ r[4] }}" data-desc="{{ r[5] }}"
+                  data-status="{{ r[6] }}" data-comments="{{ r[7] or '' }}">View</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="mt-6">
+        {% if total_pages > 1 %}
+        <div class="flex justify-center space-x-2">
+          {% for p in range(1, total_pages + 1) %}
+          <a href="{{ url_for('admin_leave_requests', page=p, **request.args.to_dict()) }}"
+            class="px-3 py-1 border rounded {% if p == page %}bg-blue-600 text-white{% endif %}">
+            {{ p }}
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="leave-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg max-w-lg w-full">
+    <h2 class="text-xl font-semibold mb-4">Leave Request Details</h2>
+    <form method="POST" action="/admin/leave_requests/handle" id="leave-form">
+      <input type="hidden" name="request_id" id="modal-request-id">
+      <p><strong>Employee:</strong> <span id="modal-emp-name"></span></p>
+      <p><strong>Type:</strong> <span id="modal-type"></span></p>
+      <p><strong>Dates:</strong> <span id="modal-dates"></span></p>
+      <p><strong>Status:</strong> <span id="modal-status"></span></p>
+      <p><strong>Description:</strong> <span id="modal-desc"></span></p>
+
+      <div class="mt-4">
+        <label class="block text-sm font-medium">Manager Comments</label>
+        <textarea name="comments" id="modal-comments" rows="3" class="w-full border px-3 py-2 rounded-md"
+          readonly></textarea>
+      </div>
+
+      <div class="mt-4 flex justify-end space-x-2" id="modal-actions">
+        <button type="submit" name="action" value="approved"
+          class="bg-green-600 text-white px-4 py-2 rounded-md">Approve</button>
+        <button type="submit" name="action" value="rejected"
+          class="bg-red-600 text-white px-4 py-2 rounded-md">Reject</button>
+      </div>
+
+      <div class="mt-2 text-right">
+        <button type="button" class="close-modal bg-gray-400 text-white px-4 py-2 rounded-md">Close</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- JS -->
+<script>
+  const modal = document.getElementById('leave-modal');
+  const form = document.getElementById('leave-form');
+  const modalActions = document.getElementById('modal-actions');
+
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const status = btn.dataset.status;
+
+      document.getElementById('modal-request-id').value = btn.dataset.id;
+      document.getElementById('modal-emp-name').textContent = btn.dataset.emp;
+      document.getElementById('modal-type').textContent = btn.dataset.type;
+      document.getElementById('modal-dates').textContent = btn.dataset.dates;
+      document.getElementById('modal-status').textContent = status;
+      document.getElementById('modal-desc').textContent = btn.dataset.desc;
+      document.getElementById('modal-comments').value = btn.dataset.comments;
+
+      const isPending = status === 'pending';
+      document.getElementById('modal-comments').readOnly = !isPending;
+      modalActions.classList.toggle('hidden', !isPending);
+
+      modal.classList.remove('hidden');
+    });
+  });
+
+  document.querySelectorAll('.close-modal').forEach(btn => {
+    btn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+  });
+</script>
+
+{% endblock %}
