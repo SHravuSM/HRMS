@@ -1,73 +1,284 @@
 {% extends "base.html" %}
+
 {% block title %}All Policies{% endblock %}
+
 {% block content %}
-
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Policy Management</h2>
-        <a href="{{ url_for('add_policy') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Add New Policy
-        </a>
-    </div>
-
-    {% if policies %}
-        <div class="alert alert-info">
-            {{ policies|length }} {{ 'policy' if policies|length == 1 else 'policies' }} found
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-center space-x-3 mb-4 sm:mb-0">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">Policy Documents</h1>
+                        <p class="text-gray-600">
+                            {% if session.emp_type == 'admin' %}
+                                Manage and organize company policies
+                            {% else %}
+                                Access company policies and important documents
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if session.emp_type == 'admin' %}
+                <div class="flex-shrink-0">
+                    <a href="{{ url_for('add_policy') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add New Policy
+                    </a>
+                </div>
+                {% endif %}
+            </div>
         </div>
 
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Policy Name</th>
-                                <th>File Name</th>
-                                <th>File Size</th>
-                                <th>Upload Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for policy in policies %}
-                            <tr>
-                                <td>#{{ policy[0] }}</td>
-                                <td>{{ policy[1] }}</td>
-                                <td>{{ policy[4] }}</td>
-                                <td>{{ "%.2f"|format(policy[5]/1024) }} KB</td>
-                                <td>{{ policy[6][:19] }}</td>
-                                <td>
-                                    <a href="{{ url_for('view_policy', policy_id=policy[0]) }}" 
-                                       class="btn btn-sm btn-success" title="Download">
-                                        <i class="fas fa-download"></i>
-                                    </a>
-                                    <a href="{{ url_for('delete_policy', policy_id=policy[0]) }}" 
-                                       class="btn btn-sm btn-danger ms-1" 
-                                       onclick="return confirm('Are you sure you want to delete this policy?')"
-                                       title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        {% if policies %}
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Policies</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ policies|length }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Status</dt>
+                            <dd class="text-lg font-semibold text-gray-900">Active</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Size</dt>
+                            <dd class="text-lg font-semibold text-gray-900">
+                                {% set total_size = policies|sum(attribute=5) %}
+                                {% set total_mb = (total_size / 1024 / 1024) | round(1) %}
+                                {{ total_mb }} MB
+                            </dd>
+                        </dl>
+                    </div>
                 </div>
             </div>
         </div>
-    {% else %}
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-file-pdf fa-3x text-muted mb-3"></i>
-                <h4>No Policies Found</h4>
-                <p class="text-muted">Get started by adding your first policy document.</p>
-                <a href="{{ url_for('add_policy') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add Your First Policy
-                </a>
+
+        <!-- Policies Table -->
+        <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900">All Policy Documents</h2>
+                    <div class="text-sm text-gray-500">{{ policies|length }} total policies</div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Policy Information
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                File Size
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Upload Date
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for policy in policies %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ policy[1] }}</div>
+                                        <div class="text-sm text-gray-500">{{ policy[4] }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">
+                                    {% set size_kb = (policy[5] / 1024) | round(2) %}
+                                    {% if size_kb < 1024 %}
+                                        {{ size_kb }} KB
+                                    {% else %}
+                                        {{ (size_kb / 1024) | round(2) }} MB
+                                    {% endif %}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {% if size_kb < 1024 %}
+                                        Small file
+                                    {% elif size_kb < 5120 %}
+                                        Medium file
+                                    {% else %}
+                                        Large file
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">
+                                    {{ policy[6][:10] }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ policy[6][11:16] }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex items-center justify-end space-x-2">
+                                    {% if session.emp_type == 'admin' %}
+                                    <!-- Admin Actions -->
+                                    <a href="{{ url_for('view_policy', policy_id=policy[0]) }}" 
+                                       class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                                       title="View/Download">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        View
+                                    </a>
+                                    <form method="POST" action="{{ url_for('delete_policy', policy_id=policy[0]) }}" 
+                                          class="inline-block"
+                                          onsubmit="return confirm('Are you sure you want to delete this policy? This action cannot be undone.')">
+                                        <button type="submit" 
+                                                class="inline-flex items-center px-3 py-1.5 border border-red-300 text-xs font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+                                                title="Delete Policy">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            Delete
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <!-- Employee Actions -->
+                                    <a href="{{ url_for('employee_view_policy', policy_id=policy[0]) }}" 
+                                       class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                       title="Download Policy">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        Download
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-    {% endif %}
-</div>
 
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-xl border-2 border-dashed border-gray-200 p-12">
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No Policy Documents Found</h3>
+                <p class="text-gray-600 mb-6 max-w-sm mx-auto">
+                    {% if session.emp_type == 'admin' %}
+                        Get started by uploading your first company policy document. You can add policies for employee guidelines, procedures, and important company information.
+                    {% else %}
+                        No policy documents have been uploaded yet. Please check back later or contact your administrator.
+                    {% endif %}
+                </p>
+                {% if session.emp_type == 'admin' %}
+                <a href="{{ url_for('add_policy') }}" 
+                   class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add First Policy
+                </a>
+                {% else %}
+                <div class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-600 text-sm rounded-lg">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Check back later for updates
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if policies and session.emp_type == 'admin' %}
+        <!-- Quick Actions Section for Admin -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-blue-900 mb-2">Policy Management Tips</h3>
+                    <ul class="text-sm text-blue-800 space-y-1">
+                        <li>• Keep policy documents up to date and review them regularly</li>
+                        <li>• Use clear, descriptive names for easy identification</li>
+                        <li>• Ensure important policies are easily accessible to all employees</li>
+                        <li>• Consider organizing policies by category or department</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

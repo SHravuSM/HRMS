@@ -128,8 +128,6 @@ class Database:
             )
         ''')
 
-                # ------------------ Wiki Category --------------------------------
-   
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS TblWikiCategory (
                 CategoryId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -148,8 +146,7 @@ class Database:
                 OriginalFileName  TEXT    NOT NULL,      -- name user uploaded
                 FileSize          INTEGER NOT NULL,      -- bytes
                 UploadedAt        TEXT    NOT NULL       -- ISO-8601 timestamp
-);
-
+            )
         ''')
         
         cursor.execute('''
@@ -163,8 +160,7 @@ class Database:
                 FOREIGN KEY (CategoryId) REFERENCES TblWikiCategory(CategoryId)
             )
         ''')
-            # ------------------ Wiki Views --------------------------------------
-  
+           
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS TblWikiViews (
                 WikiViewId   INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1232,13 +1228,16 @@ class Database:
         conn.close()
         return rows
 
+    # Policy Management Methods
     def add_policy_to_db(self, policy_name, filepath, filename, original_filename, file_size):
-        """Add new policy to database"""
+        """Add new policy to database."""
         conn = self.get_connection()
-        conn.execute('''
-            INSERT INTO TblPolicies
-            (PolicyName, FilePath, FileName, OriginalFileName, FileSize, UploadedAt)
-            VALUES (?, ?, ?, ?, ?, ?)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+        INSERT INTO TblPolicies
+        (PolicyName, FilePath, FileName, OriginalFileName, FileSize, UploadedAt)
+        VALUES (?, ?, ?, ?, ?, ?)
         ''', (
             policy_name,
             filepath,
@@ -1247,40 +1246,56 @@ class Database:
             file_size,
             datetime.now().isoformat()
         ))
+        
         conn.commit()
         conn.close()
 
     def get_all_policies(self):
         """Get all policies from database"""
         conn = self.get_connection()
-        cursor = conn.execute('SELECT * FROM TblPolicies ORDER BY UploadedAt DESC')
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM TblPolicies ORDER BY UploadedAt DESC')
         policies = cursor.fetchall()
         conn.close()
         return policies
 
-    
-    def policy_exists(self, policy_name):
-        """Check if policy name already exists"""
+    def get_policy_by_id(self, policy_id):
+        """Get policy by ID"""
         conn = self.get_connection()
-        cursor = conn.execute('SELECT 1 FROM TblPolicies WHERE PolicyName = ?', (policy_name,))
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM TblPolicies WHERE PolicyID = ?', (policy_id,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return {
+                'PolicyID': row[0],
+                'PolicyName': row[1],
+                'FilePath': row[2],
+                'FileName': row[3],
+                'OriginalFileName': row[4],
+                'FileSize': row[5],
+                'UploadedAt': row[6]
+            }
+        return None
+
+    def delete_policy(self, policy_id):
+        """Delete policy from database"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('DELETE FROM TblPolicies WHERE PolicyID = ?', (policy_id,))
+        conn.commit()
+        conn.close()
+
+    def policy_exists(self, policy_name):
+        """Check if policy name exists"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT 1 FROM TblPolicies WHERE PolicyName = ?', (policy_name,))
         exists = cursor.fetchone() is not None
         conn.close()
         return exists
-
-    def create_policy_table(self):
-        """Create policy table if it doesn't exist"""
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS TblPolicies (
-                PolicyID INTEGER PRIMARY KEY AUTOINCREMENT,
-                PolicyName TEXT NOT NULL UNIQUE,
-                FilePath TEXT NOT NULL,
-                FileName TEXT NOT NULL,
-                OriginalFileName TEXT NOT NULL,
-                FileSize INTEGER NOT NULL,
-                UploadedAt TEXT NOT NULL
-            )
-        ''')
-        conn.commit()
-        conn.close()

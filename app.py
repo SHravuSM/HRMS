@@ -8,20 +8,16 @@ from pytz import timezone
 import uuid
 from datetime import datetime, date
 from database import Database
-from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from flask import Flask, Response, current_app, render_template, request, redirect, send_from_directory, url_for, session, flash, jsonify, abort
 
 app = Flask(__name__)
-db = Database()
 app.secret_key = 'your-secret-key-change-this-in-production'
+db = Database()
 
 app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-
-# Create policies folder and database table
-os.makedirs('policies', exist_ok=True)
-db.create_policy_table()
+POLICIES_FOLDER = 'Policies'
+os.makedirs(POLICIES_FOLDER, exist_ok=True)
 
 UPLOAD_FOLDER = 'static/bngImg'
 INVOICE_FOLDER = 'static/invoices'
@@ -58,6 +54,27 @@ def get_db_connection():
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+@app.template_filter('todate')
+def todate(value):
+    """Jinja2 filter: given a datetime-string or datetime, return its date."""
+    if not value:
+        return ''
+    
+    if isinstance(value, datetime):
+        return value.date()
+    
+    s = str(value).strip()
+    for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            continue
+    
+    try:
+        return datetime.strptime(s[:10], '%Y-%m-%d').date()
+    except Exception:
+        return s
 
 @app.template_filter('todate')
 def todate(value):
@@ -1615,52 +1632,55 @@ def admin_wiki_views():
 def add_policy():
     if 'user_id' not in session or session['emp_type'] != 'admin':
         return redirect(url_for('login'))
-        
+    
     if request.method == 'POST':
-        # Get form data
-        policy_name = request.form['policy_name'].strip()
-        file = request.files['policy_file']
+        policy_name = request.form.get('policy_name', '').strip()
+        file = request.files.get('policy_file')
         
-        # Simple validation
-        if not policy_name or not file or file.filename == '':
-            flash('Please fill all fields', 'error')
+        # Validation
+        if not policy_name:
+            flash('Policy name is required', 'error')
             return redirect(request.url)
         
-        # Check if PDF
-        if not file.filename.lower().endswith('.pdf'):
-            flash('Only PDF files allowed', 'error')
+        if not file or file.filename == '':
+            flash('Please select a file', 'error')
             return redirect(request.url)
         
-        # Check if policy name exists
+        if not allowed_file(file.filename):
+            flash('Only PDF files are allowed', 'error')
+            return redirect(request.url)
+        
         if db.policy_exists(policy_name):
             flash('Policy name already exists', 'error')
             return redirect(request.url)
         
-        # Generate filename with timestamp
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        secure_name = secure_filename(file.filename)
-        filename = f"{timestamp}_{secure_name}"
-        filepath = os.path.join('policies', filename)
-        
-        # Ensure policies directory exists
-        os.makedirs('policies', exist_ok=True)
-        
-        # Save file
-        file.save(filepath)
-        file_size = os.path.getsize(filepath)
-        
-        # Save to database
-        db.add_policy_to_db(policy_name, filepath, filename, file.filename, file_size)
-        
-        flash('Policy uploaded successfully!', 'success')
-        return redirect(url_for('list_policy'))
+        try:
+            # Generate unique filename
+            original_filename = secure_filename(file.filename)
+            unique_filename = generate_unique_filename(original_filename)
+            filepath = os.path.join(POLICIES_FOLDER, unique_filename)
+            
+            # Save file
+            file.save(filepath)
+            file_size = os.path.getsize(filepath)
+            
+            # Save to database
+            db.add_policy_to_db(policy_name, filepath, unique_filename, original_filename, file_size)
+            
+            flash('Policy uploaded successfully!', 'success')
+            return redirect(url_for('list_policies'))
+            
+        except Exception as e:
+            flash(f'Error uploading policy: {str(e)}', 'error')
+            return redirect(request.url)
     
     return render_template('add_policy.html')
 
-@app.route('/admin/policies')
-def list_policy():
+@app.route('/admin/list_policies')
+def list_policies():
     if 'user_id' not in session or session['emp_type'] != 'admin':
         return redirect(url_for('login'))
+    
     policies = db.get_all_policies()
     return render_template('list_policy.html', policies=policies)
 
@@ -1669,47 +1689,74 @@ def view_policy(policy_id):
     if 'user_id' not in session or session['emp_type'] != 'admin':
         return redirect(url_for('login'))
     
-    conn = sqlite3.connect('project_tracking.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT FilePath, OriginalFileName FROM TblPolicies WHERE PolicyID = ?', (policy_id,))
-    policy = cursor.fetchone()
-    conn.close()
-    
+    policy = db.get_policy_by_id(policy_id)
     if not policy:
         flash('Policy not found', 'error')
-        return redirect(url_for('list_policy'))
+        return redirect(url_for('list_policies'))
     
-    filepath, original_name = policy
+    filepath = policy['FilePath']
+    original_name = policy['OriginalFileName']
+    
     if os.path.exists(filepath):
-        return send_from_directory('', filepath, as_attachment=True, download_name=original_name)
+        directory = os.path.dirname(filepath)
+        filename = os.path.basename(filepath)
+        return send_from_directory(directory, filename, as_attachment=True, download_name=original_name)
     else:
         flash('Policy file not found', 'error')
-        return redirect(url_for('list_policy'))
+        return redirect(url_for('list_policies'))
 
-@app.route('/admin/delete_policy/<int:policy_id>')
+@app.route('/admin/delete_policy/<int:policy_id>', methods=['POST'])
 def delete_policy(policy_id):
     if 'user_id' not in session or session['emp_type'] != 'admin':
         return redirect(url_for('login'))
     
-    conn = sqlite3.connect('project_tracking.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT FilePath FROM TblPolicies WHERE PolicyID = ?', (policy_id,))
-    policy = cursor.fetchone()
-    
+    policy = db.get_policy_by_id(policy_id)
     if policy:
-        filepath = policy[0]
-        # Delete file from filesystem
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        # Delete from database
-        cursor.execute('DELETE FROM TblPolicies WHERE PolicyID = ?', (policy_id,))
-        conn.commit()
-        flash('Policy deleted successfully', 'success')
+        try:
+            # Delete file from filesystem
+            if os.path.exists(policy['FilePath']):
+                os.remove(policy['FilePath'])
+            
+            # Delete from database
+            db.delete_policy(policy_id)
+            flash('Policy deleted successfully', 'success')
+            
+        except Exception as e:
+            flash(f'Error deleting policy: {str(e)}', 'error')
     else:
         flash('Policy not found', 'error')
     
-    conn.close()
-    return redirect(url_for('list_policy'))
+    return redirect(url_for('list_policies'))
+
+# Employee policy viewing
+@app.route('/employee/policies')
+def employee_policies():
+    if 'user_id' not in session or session['emp_type'] != 'emp':
+        return redirect(url_for('login'))
+    
+    policies = db.get_all_policies()
+    return render_template('employee_policies.html', policies=policies)
+
+@app.route('/employee/policy/<int:policy_id>')
+def employee_view_policy(policy_id):
+    if 'user_id' not in session or session['emp_type'] != 'emp':
+        return redirect(url_for('login'))
+    
+    policy = db.get_policy_by_id(policy_id)
+    if not policy:
+        flash('Policy not found', 'error')
+        return redirect(url_for('employee_policies'))
+    
+    filepath = policy['FilePath']
+    original_name = policy['OriginalFileName']
+    
+    if os.path.exists(filepath):
+        directory = os.path.dirname(filepath)
+        filename = os.path.basename(filepath)
+        return send_from_directory(directory, filename, as_attachment=True, download_name=original_name)
+    else:
+        flash('Policy file not found', 'error')
+        return redirect(url_for('employee_policies'))
 
 if __name__ == '__main__':
     app.run(debug=True)

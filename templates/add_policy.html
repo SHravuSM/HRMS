@@ -1,136 +1,352 @@
 {% extends "base.html" %}
+
 {% block title %}Add Policy{% endblock %}
+
 {% block content %}
-
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">Add New Policy</h4>
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex items-center space-x-3 mb-2">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data" id="policyForm">
-                        <div class="mb-3">
-                            <label for="policy_name" class="form-label">Policy Name *</label>
-                            <input type="text" class="form-control" id="policy_name" name="policy_name" 
-                                   required maxlength="255" placeholder="Enter policy name">
-                            <div class="form-text">Maximum 255 characters</div>
-                        </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Add New Policy Document</h1>
+                    <p class="text-gray-600">Upload a new company policy for employee access</p>
+                </div>
+            </div>
+        </div>
 
-                        <div class="mb-3">
-                            <label for="policy_file" class="form-label">Policy File *</label>
-                            <div class="drop-zone" id="dropZone">
-                                <input type="file" class="form-control" id="policy_file" name="policy_file" 
-                                       accept=".pdf" required style="display: none;">
-                                <div class="drop-zone-text">
-                                    <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
-                                    <p>Click to select file or drag and drop</p>
-                                    <small class="text-muted">PDF files only, up to 16MB</small>
-                                </div>
+        <!-- Main Form Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Policy Information</h2>
+                <p class="text-sm text-gray-600 mt-1">Fill in the details and upload your policy document</p>
+            </div>
+
+            <div class="p-6">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="mb-6 space-y-3">
+                    {% for category, message in messages %}
+                    <div class="flex items-center p-4 rounded-lg border {{ 'bg-red-50 border-red-200 text-red-800' if category == 'error' else 'bg-green-50 border-green-200 text-green-800' }}">
+                        <div class="flex-shrink-0">
+                            {% if category == 'error' %}
+                            <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            </svg>
+                            {% else %}
+                            <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium">{{ message }}</p>
+                        </div>
+                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 {{ 'text-red-500 hover:bg-red-100' if category == 'error' else 'text-green-500 hover:bg-green-100' }}" onclick="this.parentElement.remove()">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" enctype="multipart/form-data" id="policyForm" class="space-y-6">
+                    <!-- Policy Name Input -->
+                    <div>
+                        <label for="policy_name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Policy Name <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="policy_name" 
+                                   name="policy_name" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 pl-10"
+                                   placeholder="Enter policy name"
+                                   required>
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
                             </div>
-                            <div id="fileInfo" class="mt-2" style="display: none;"></div>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Choose a unique, descriptive name for this policy
+                        </p>
+                    </div>
+
+                    <!-- Hidden File Input -->
+                    <input type="file" 
+                           id="policy_file" 
+                           name="policy_file" 
+                           accept=".pdf"
+                           class="hidden"
+                           required>
+
+                    <!-- File Upload Drop Zone -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">
+                            Policy File <span class="text-red-500">*</span>
+                        </label>
+                        
+                        <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-blue-400 hover:bg-blue-50">
+                            <!-- Default Drop Zone Content -->
+                            <div id="dropZoneContent">
+                                <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Click to upload or drag and drop</h3>
+                                <p class="text-gray-600 mb-1">PDF files only</p>
+                                <p class="text-sm text-gray-500">Maximum file size: 10MB</p>
+                            </div>
+
+                            <!-- File Selected Content -->
+                            <div id="fileInfo" class="hidden">
+                                <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-green-700 mb-1" id="fileName"></h3>
+                                <p class="text-sm text-gray-600" id="fileSize"></p>
+                                <button type="button" id="removeFile" class="mt-3 text-red-600 hover:text-red-800 text-sm font-medium">
+                                    Remove file
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ url_for('list_policy') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back
-                            </a>
-                            <button type="submit" class="btn btn-primary" id="submitBtn">
-                                <i class="fas fa-upload"></i> Upload Policy
-                            </button>
+                        <!-- File Requirements -->
+                        <div class="mt-3 flex items-start space-x-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 mt-0.5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <p class="font-medium">File Requirements:</p>
+                                <ul class="mt-1 list-disc list-inside space-y-1 text-gray-500">
+                                    <li>Only PDF files are supported</li>
+                                    <li>Maximum file size is 10MB</li>
+                                    <li>File name should be descriptive</li>
+                                </ul>
+                            </div>
                         </div>
-                    </form>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-gray-200">
+                        <a href="{{ url_for('list_policies') }}" 
+                           class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                id="submitBtn"
+                                class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            Upload Policy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-8 bg-blue-50 rounded-xl p-6 border border-blue-200">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-blue-900 mb-2">Need Help?</h3>
+                    <div class="text-sm text-blue-700 space-y-2">
+                        <p>• Make sure your policy document is in PDF format and under 10MB</p>
+                        <p>• Use clear, descriptive names that employees can easily understand</p>
+                        <p>• Ensure the document is properly formatted and readable</p>
+                        <p>• Consider including version numbers or dates in the policy name</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-.drop-zone {
-    border: 2px dashed #ddd;
-    border-radius: 8px;
-    padding: 40px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.drop-zone:hover {
-    border-color: #007bff;
-    background-color: #f8f9fa;
-}
-
-.drop-zone.dragover {
-    border-color: #007bff;
-    background-color: #e3f2fd;
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('policy_file');
+    const dropZoneContent = document.getElementById('dropZoneContent');
     const fileInfo = document.getElementById('fileInfo');
-    const form = document.getElementById('policyForm');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
     const submitBtn = document.getElementById('submitBtn');
+    const removeFileBtn = document.getElementById('removeFile');
 
     // Click to select file
-    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    // Remove file button
+    removeFileBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        fileInput.value = '';
+        resetFileDisplay();
+    });
 
     // Drag and drop functionality
-    dropZone.addEventListener('dragover', (e) => {
+    dropZone.addEventListener('dragover', function(e) {
         e.preventDefault();
-        dropZone.classList.add('dragover');
+        dropZone.classList.add('border-blue-500', 'bg-blue-50');
+        dropZone.classList.remove('border-gray-300');
     });
 
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('dragover');
+    dropZone.addEventListener('dragleave', function() {
+        dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        dropZone.classList.add('border-gray-300');
     });
 
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('drop', function(e) {
         e.preventDefault();
-        dropZone.classList.remove('dragover');
+        dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        dropZone.classList.add('border-gray-300');
+        
         const files = e.dataTransfer.files;
         if (files.length > 0) {
             fileInput.files = files;
-            displayFileInfo(files[0]);
+            handleFileSelect(files[0]);
         }
     });
 
-    // File selection
-    fileInput.addEventListener('change', (e) => {
+    // File input change
+    fileInput.addEventListener('change', function(e) {
         if (e.target.files.length > 0) {
-            displayFileInfo(e.target.files[0]);
+            handleFileSelect(e.target.files[0]);
+        } else {
+            resetFileDisplay();
         }
     });
 
-    function displayFileInfo(file) {
-        if (file.type === 'application/pdf') {
-            fileInfo.innerHTML = `
-                <div class="alert alert-success">
-                    <i class="fas fa-file-pdf"></i> ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)
-                </div>
-            `;
-            fileInfo.style.display = 'block';
-        } else {
-            fileInfo.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i> Please select a PDF file only
-                </div>
-            `;
-            fileInfo.style.display = 'block';
+    function handleFileSelect(file) {
+        // Validate file type
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            showNotification('Please select a PDF file only.', 'error');
             fileInput.value = '';
+            resetFileDisplay();
+            return;
         }
+
+        // Validate file size (10MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            showNotification('File size must be less than 10MB.', 'error');
+            fileInput.value = '';
+            resetFileDisplay();
+            return;
+        }
+
+        // Show file info
+        dropZoneContent.classList.add('hidden');
+        fileInfo.classList.remove('hidden');
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        dropZone.classList.add('border-green-500', 'bg-green-50');
+        dropZone.classList.remove('border-gray-300');
+    }
+
+    function resetFileDisplay() {
+        dropZoneContent.classList.remove('hidden');
+        fileInfo.classList.add('hidden');
+        dropZone.classList.remove('border-green-500', 'bg-green-50', 'border-blue-500', 'bg-blue-50');
+        dropZone.classList.add('border-gray-300');
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function showNotification(message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg border z-50 ${
+            type === 'error' 
+                ? 'bg-red-50 border-red-200 text-red-800' 
+                : 'bg-green-50 border-green-200 text-green-800'
+        }`;
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    ${type === 'error' 
+                        ? '<svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>'
+                        : '<svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>'
+                    }
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
     }
 
     // Form submission
-    form.addEventListener('submit', function(e) {
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    document.getElementById('policyForm').addEventListener('submit', function(e) {
+        const policyName = document.getElementById('policy_name').value.trim();
+        const policyFile = fileInput.files[0];
+
+        if (!policyName) {
+            showNotification('Please enter a policy name.', 'error');
+            e.preventDefault();
+            return;
+        }
+
+        if (!policyFile) {
+            showNotification('Please select a PDF file.', 'error');
+            e.preventDefault();
+            return;
+        }
+
+        // Show loading state
+        submitBtn.innerHTML = `
+            <svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Uploading...
+        `;
         submitBtn.disabled = true;
     });
 });
 </script>
-
 {% endblock %}

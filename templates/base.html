@@ -77,6 +77,8 @@
     {% set view_wikis_active = request.endpoint == 'view_wikis' %}
     {% set is_policies_active = request.endpoint in ['list_policies', 'add_policy'] %}
     {% set employee_assets_active = request.endpoint in ['employee_assets'] %}
+    {% set employee_policies_active = request.endpoint == 'employee_policies' %} <!-- ADD THIS LINE -->
+
 
 
     <aside id="sidebar" class="hidden md:block fixed top-0 left-0 h-screen w-{{ SIDEBAR_W }} bg-white shadow-lg z-40">
@@ -172,7 +174,7 @@
                         <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                     </summary>
                     <div class="pl-9 mt-1 space-y-1">
-                        {{ navlink('View Policies','fas fa-clipboard-list','list_policy') }}
+                        {{ navlink('View Policies','fas fa-clipboard-list','list_policies') }}
                         {{ navlink('Add Policies','fas fa-address-book','add_policy') }}
                     </div>
                 </details>
@@ -238,6 +240,7 @@
                     {{ navlink('My Expense','fas fa-list','existing_expenses') }}
                     {{ navlink('Leave Request','fas fa-plane-departure','employee_leave') }}
                     {{ navlink('My Leave Request','fas fa-clock','employee_leave_requests') }}
+                    {{ navlink('Company Policies','fas fa-file-alt','employee_policies') }}
                     {{ navlink('Careers','fas fa-briefcase','employee_careers') }}
                     {{ navlink('My Assets','fas fa-box','employee_assets') }}
                     {{ navlink('Wiki','fas fa-book','employee_wiki_list') }}
