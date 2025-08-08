@@ -11,6 +11,13 @@ from database import Database
 from werkzeug.utils import secure_filename
 from flask import Flask, Response, current_app, render_template, request, redirect, send_from_directory, url_for, session, flash, jsonify, abort
 
+# Configure logging to a file
+logging.basicConfig(
+    filename="error.log",                # Log file name
+    level=logging.ERROR,                 # Only log errors and above
+    format="%(asctime)s [%(levelname)s] %(message)s",  # Log format
+)
+
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'
 db = Database()
@@ -1795,6 +1802,15 @@ def employee_view_policy(policy_id):
     else:
         flash('Policy file not found', 'error')
         return redirect(url_for('employee_policies'))
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Log the error with traceback
+    logging.exception("An unexpected error occurred")
+
+    # Show an HTML error page (templates/error.html)
+    return render_template("error.html", error=e), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)

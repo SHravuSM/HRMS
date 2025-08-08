@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server Error</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fafafa;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 { color: #d9534f; }
+        p { color: #555; }
+        a {
+            text-decoration: none;
+            color: #0275d8;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Oops! Something went wrong.</h1>
+    <p>{{ error }}</p> <!-- In production, hide actual error -->
+    <a href="/">Go back home</a>
+</body>
+</html>
