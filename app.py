@@ -713,59 +713,97 @@ def delete_leave_type(lt_id):
     return redirect(url_for('admin_leave_types'))
 
 # ------ Leave requests list & approval ---------------
+
+@app.route('/admin/employee_celebrations')
+def admin_employee_celebrations():
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+    
+    filter_type = request.args.get('filter', 'anniversary')  # default to anniversary
+    
+    # Get celebrations data
+    celebrations = db.get_employee_anniversaries(filter_type)
+    today_celebrations = db.get_today_celebrations()
+    
+    return render_template('employee_celebrations.html', 
+                         celebrations=celebrations,
+                         today_celebrations=today_celebrations,
+                         filter_type=filter_type)
+
+@app.route('/employee/celebrations')
+def employee_celebrations():
+    if 'user_id' not in session or session['emp_type'] != 'emp':
+        return redirect(url_for('login'))
+    
+    filter_type = request.args.get('filter', 'anniversary')
+    
+    # Get celebrations data
+    celebrations = db.get_employee_anniversaries(filter_type)
+    today_celebrations = db.get_today_celebrations()
+    
+    return render_template('employee_celebrations.html', 
+                         celebrations=celebrations,
+                         today_celebrations=today_celebrations,
+                         filter_type=filter_type,
+                         is_employee=True)
+
 @app.route('/admin/leave_requests')
 def admin_leave_requests():
     if 'user_id' not in session or session['emp_type'] != 'admin':
         return redirect(url_for('login'))
 
+    # Pagination
     page = int(request.args.get('page', 1))
     per_page = 10
     offset = (page - 1) * per_page
 
-    filters = []
-    params = []
-
-    employee = request.args.get('employee', '').strip()
-    if employee:
-        filters.append("e.emp_id = ?")
-        params.append(employee)
-
-    ltype = request.args.get('type', '').strip()
-    if ltype:
-        filters.append("lt.leave_type_id = ?")
-        params.append(ltype)
-
+    # Filter parameters
+    employee_id = request.args.get('employee', '').strip()
+    leave_type_id = request.args.get('type', '').strip()
     status = request.args.get('status', '').strip()
-    if status:
-        filters.append("lr.status = ?")
-        params.append(status)
-
     from_date = request.args.get('from_date', '').strip()
-    if from_date:
-        filters.append("DATE(lr.start_date) >= ?")
-        params.append(from_date)
-
     to_date = request.args.get('to_date', '').strip()
-    if to_date:
-        filters.append("DATE(lr.end_date) <= ?")
-        params.append(to_date)
+    
+    # Sorting parameters
+    sort_by = request.args.get('sort_by', 'inserted_date')
+    sort_order = request.args.get('sort_order', 'DESC')
 
-    where = 'WHERE ' + ' AND '.join(filters) if filters else ''
-    total = db.count_leave_requests(where, tuple(params))
-    requests = db.get_leave_requests_paginated(where, tuple(params), limit=per_page, offset=offset)
+    # Convert empty strings to None
+    filters = {
+        'employee_id': employee_id if employee_id else None,
+        'leave_type_id': leave_type_id if leave_type_id else None,
+        'status': status if status else None,
+        'from_date': from_date if from_date else None,
+        'to_date': to_date if to_date else None,
+        'sort_by': sort_by,
+        'sort_order': sort_order,
+        'limit': per_page,
+        'offset': offset
+    }
 
+    # Get filtered and sorted results
+    requests, total = db.get_leave_requests_with_advanced_filters(**filters)
     total_pages = math.ceil(total / per_page)
 
-    # NEW: fetch options
+    # Get options for dropdowns
     employees = db.get_employees(status_filter='active')
     leave_types = db.get_leave_types()
 
     return render_template('admin_leave_requests.html',
-                           requests=requests,
-                           page=page,
-                           total_pages=total_pages,
-                           employees=employees,
-                           leave_types=leave_types)
+                         requests=requests,
+                         page=page,
+                         total_pages=total_pages,
+                         total_requests=total,
+                         employees=employees,
+                         leave_types=leave_types,
+                         # Pass current filter values back to template
+                         current_employee=employee_id,
+                         current_type=leave_type_id,
+                         current_status=status,
+                         current_from_date=from_date,
+                         current_to_date=to_date,
+                         current_sort_by=sort_by,
+                         current_sort_order=sort_order)
 
 @app.route('/admin/leave_requests/<int:req_id>/<action>')
 def update_leave_request(req_id, action):

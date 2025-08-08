@@ -191,6 +191,7 @@ class Database:
                 CREATE TABLE IF NOT EXISTS TblEmployeeProfile (
                     ProfileId INTEGER PRIMARY KEY AUTOINCREMENT,
                     EmployeeId INTEGER NOT NULL UNIQUE,
+                    EmgUpdatedByEmp INTEGER DEFAULT 0,
                     UANNo TEXT,
                     PANNO TEXT,
                     AadharNo TEXT,
@@ -780,6 +781,80 @@ class Database:
         with self.get_connection() as c:
             c.execute('INSERT OR IGNORE INTO tbl_expense_type (expense_type) VALUES (?)', (etype,))
 
+    def get_leave_requests_with_advanced_filters(self, employee_id=None, leave_type_id=None, status=None, 
+                                            from_date=None, to_date=None, sort_by='inserted_date', 
+                                            sort_order='DESC', limit=10, offset=0):
+        """
+        Get leave requests with advanced filtering and sorting
+        """
+        with self.get_connection() as c:
+            base_query = '''
+            SELECT lr.request_id, lt.leave_type, e.first_name || ' ' || e.last_name as emp_name,
+                lr.start_date, lr.end_date, lr.leave_desc,
+                lr.status, lr.comments, lr.inserted_date, e.emp_id
+            FROM tbl_leave_request lr
+            JOIN tbl_leave_type lt ON lt.leave_type_id = lr.leave_type_id
+            JOIN tbl_employee e ON e.emp_id = lr.employee_id
+            '''
+            
+            count_query = '''
+            SELECT COUNT(*)
+            FROM tbl_leave_request lr
+            JOIN tbl_leave_type lt ON lt.leave_type_id = lr.leave_type_id
+            JOIN tbl_employee e ON e.emp_id = lr.employee_id
+            '''
+            
+            conditions = []
+            params = []
+            
+            if employee_id:
+                conditions.append("e.emp_id = ?")
+                params.append(employee_id)
+                
+            if leave_type_id:
+                conditions.append("lt.leave_type_id = ?")
+                params.append(leave_type_id)
+                
+            if status:
+                conditions.append("lr.status = ?")
+                params.append(status)
+                
+            if from_date:
+                conditions.append("DATE(lr.start_date) >= ?")
+                params.append(from_date)
+                
+            if to_date:
+                conditions.append("DATE(lr.end_date) <= ?")
+                params.append(to_date)
+            
+            where_clause = ""
+            if conditions:
+                where_clause = " WHERE " + " AND ".join(conditions)
+            
+            # Count total records
+            count_result = c.execute(count_query + where_clause, params).fetchone()
+            total_count = count_result[0]
+            
+            # Valid sort columns
+            valid_sorts = {
+                'inserted_date': 'lr.inserted_date',
+                'employee': 'e.first_name',
+                'leave_type': 'lt.leave_type',
+                'status': 'lr.status',
+                'start_date': 'lr.start_date',
+                'end_date': 'lr.end_date'
+            }
+            
+            sort_column = valid_sorts.get(sort_by, 'lr.inserted_date')
+            sort_direction = 'ASC' if sort_order.upper() == 'ASC' else 'DESC'
+            
+            final_query = f"{base_query}{where_clause} ORDER BY {sort_column} {sort_direction} LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+            
+            results = c.execute(final_query, params).fetchall()
+            
+            return results, total_count
+
     def get_expense_types(self):
         with self.get_connection() as c:
             return c.execute('SELECT expense_type_id, expense_type FROM tbl_expense_type ORDER BY expense_type').fetchall()
@@ -1228,7 +1303,6 @@ class Database:
         conn.close()
         return rows
 
-    # Policy Management Methods
     def add_policy_to_db(self, policy_name, filepath, filename, original_filename, file_size):
         """Add new policy to database."""
         conn = self.get_connection()
@@ -1299,3 +1373,102 @@ class Database:
         exists = cursor.fetchone() is not None
         conn.close()
         return exists
+    
+    def get_employee_anniversaries(self, filter_type='anniversary'):
+        """Get employees with upcoming anniversaries or birthdays"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        if filter_type == 'anniversary':
+            # Get employees with join date anniversaries
+            query = '''
+            SELECT 
+                ep.EmployeeId,
+                e.first_name || ' ' || e.last_name AS emp_name,
+                e.email,
+                ep.DOJ as join_date,
+                CASE 
+                    WHEN ep.DOJ IS NULL THEN NULL
+                    ELSE (
+                        CASE 
+                            WHEN strftime('%m-%d', ep.DOJ) = strftime('%m-%d', 'now') THEN 0
+                            WHEN strftime('%m-%d', ep.DOJ) > strftime('%m-%d', 'now') THEN
+                                CAST((julianday(strftime('%Y', 'now') || '-' || strftime('%m-%d', ep.DOJ)) - julianday('now')) AS INTEGER)
+                            ELSE
+                                CAST((julianday(strftime('%Y', 'now', '+1 year') || '-' || strftime('%m-%d', ep.DOJ)) - julianday('now')) AS INTEGER)
+                        END
+                    )
+                END as days_until,
+                CASE 
+                    WHEN ep.DOJ IS NULL THEN 0
+                    ELSE (strftime('%Y', 'now') - strftime('%Y', ep.DOJ))
+                END as years_completed
+            FROM tbl_employee e
+            LEFT JOIN TblEmployeeProfile ep ON e.emp_id = ep.EmployeeId
+            WHERE e.status = 'active' AND ep.DOJ IS NOT NULL
+            ORDER BY days_until ASC, emp_name
+            '''
+        else:  # birthday
+            query = '''
+            SELECT 
+                e.emp_id as EmployeeId,
+                e.first_name || ' ' || e.last_name AS emp_name,
+                e.email,
+                e.dob as join_date,
+                CASE 
+                    WHEN strftime('%m-%d', e.dob) = strftime('%m-%d', 'now') THEN 0
+                    WHEN strftime('%m-%d', e.dob) > strftime('%m-%d', 'now') THEN
+                        CAST((julianday(strftime('%Y', 'now') || '-' || strftime('%m-%d', e.dob)) - julianday('now')) AS INTEGER)
+                    ELSE
+                        CAST((julianday(strftime('%Y', 'now', '+1 year') || '-' || strftime('%m-%d', e.dob)) - julianday('now')) AS INTEGER)
+                END as days_until,
+                (strftime('%Y', 'now') - strftime('%Y', e.dob)) as years_completed
+            FROM tbl_employee e
+            WHERE e.status = 'active'
+            ORDER BY days_until ASC, emp_name
+            '''
+        
+        cursor.execute(query)
+        results = cursor.fetchall()
+        conn.close()
+        return results
+
+    def get_today_celebrations(self):
+        """Get employees celebrating today (both anniversaries and birthdays)"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        # Today's anniversaries
+        cursor.execute('''
+        SELECT 
+            'anniversary' as type,
+            ep.EmployeeId,
+            e.first_name || ' ' || e.last_name AS emp_name,
+            e.email,
+            ep.DOJ as date_value,
+            (strftime('%Y', 'now') - strftime('%Y', ep.DOJ)) as years_completed
+        FROM tbl_employee e
+        JOIN TblEmployeeProfile ep ON e.emp_id = ep.EmployeeId
+        WHERE e.status = 'active' 
+        AND ep.DOJ IS NOT NULL
+        AND strftime('%m-%d', ep.DOJ) = strftime('%m-%d', 'now')
+        
+        UNION ALL
+        
+        SELECT 
+            'birthday' as type,
+            e.emp_id as EmployeeId,
+            e.first_name || ' ' || e.last_name AS emp_name,
+            e.email,
+            e.dob as date_value,
+            (strftime('%Y', 'now') - strftime('%Y', e.dob)) as years_completed
+        FROM tbl_employee e
+        WHERE e.status = 'active'
+        AND strftime('%m-%d', e.dob) = strftime('%m-%d', 'now')
+        
+        ORDER BY emp_name
+        ''')
+        
+        results = cursor.fetchall()
+        conn.close()
+        return results

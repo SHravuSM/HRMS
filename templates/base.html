@@ -69,6 +69,7 @@
     {% set asset_active = request.endpoint in ['add_asset','view_assets','manage_allocation','asset_history'] %}
     {% set careers_active = request.endpoint in ['add_job', 'view_jobs', 'employee_careers'] %}
     {% set wiki_active = request.endpoint in ['admin_wiki_categories','add_wiki','view_wikis','edit_wiki'] %}
+    {% set celebrations_active = request.endpoint in ['admin_employee_celebrations', 'employee_celebrations'] %}
     {% set admin_dashboard_active = request.endpoint == 'admin_dashboard' %}
     {% set employee_dashboard_active = request.endpoint == 'employee_dashboard' %}
     {% set admin_wiki_views_active = request.endpoint == 'admin_wiki_views' %}
@@ -77,9 +78,7 @@
     {% set view_wikis_active = request.endpoint == 'view_wikis' %}
     {% set is_policies_active = request.endpoint in ['list_policies', 'add_policy'] %}
     {% set employee_assets_active = request.endpoint in ['employee_assets'] %}
-    {% set employee_policies_active = request.endpoint == 'employee_policies' %} <!-- ADD THIS LINE -->
-
-
+    {% set employee_policies_active = request.endpoint == 'employee_policies' %}
 
     <aside id="sidebar" class="hidden md:block fixed top-0 left-0 h-screen w-{{ SIDEBAR_W }} bg-white shadow-lg z-40">
         <div class="flex flex-col h-full">
@@ -192,7 +191,6 @@
                     <div class="pl-9 mt-1 space-y-1">
                         {{ navlink('Add Asset','fas fa-plus','add_asset') }}
                         {{ navlink('View Assets','fas fa-list','view_assets') }}
-                        <!--{{ navlink('Allocate Asset','fas fa-exchange-alt','allocate_asset') }}-->
                         {{ navlink('Manage Allocations','fas fa-tasks','manage_allocation') }}
                         {{ navlink('History','fas fa-history','asset_history') }}
                     </div>
@@ -208,12 +206,8 @@
                         <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                     </summary>
                     <div class="pl-9 mt-1 space-y-1">
-                        {% if session.emp_type == 'admin' %}
                         {{ navlink('Add Job','fas fa-plus','add_job') }}
                         {{ navlink('View Jobs','fas fa-list','view_jobs') }}
-                        {% else %}
-                        {{ navlink('Careers','fas fa-briefcase','employee_careers') }}
-                        {% endif %}
                     </div>
                 </details>
 
@@ -234,6 +228,19 @@
                     </div>
                 </details>
 
+                <!-- Employee Celebrations -->
+                <details class="group" {{ 'open' if celebrations_active else '' }}>
+                    <summary class="flex items-center px-5 py-2 cursor-pointer rounded-md
+                        {{ 'bg-blue-100 text-green-600 font-medium' if celebrations_active
+                           else 'text-gray-700 hover:bg-gray-100' }}">
+                        <i class="fas fa-birthday-cake w-4 mr-3"></i> Celebrations
+                        <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
+                    </summary>
+                    <div class="pl-9 mt-1 space-y-1">
+                        {{ navlink('Anniversaries & Birthdays','fas fa-gift','admin_employee_celebrations') }}
+                    </div>
+                </details>
+
                 {% else %}
                 {% set disabled = 'pointer-events-none opacity-50' if emg_missing else '' %}
                 <div>
@@ -245,6 +252,7 @@
                     {{ navlink('Careers','fas fa-briefcase','employee_careers') }}
                     {{ navlink('My Assets','fas fa-box','employee_assets') }}
                     {{ navlink('Wiki','fas fa-book','employee_wiki_list') }}
+                    {{ navlink('Celebrations','fas fa-birthday-cake','employee_celebrations') }}
                 </div>
                 {% endif %}
             </nav>
