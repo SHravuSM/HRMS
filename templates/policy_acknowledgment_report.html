@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Policy Acknowledgment Report{% endblock %}
+{% block content %}
+
+<div class="container-fluid">
+    <h2><i class="fas fa-chart-bar"></i> Policy Acknowledgment Report</h2>
+
+    <!-- Employees on Hold -->
+    {% if holds %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h4><i class="fas fa-pause"></i> Employees with Policies on Hold ({{ holds|length }})</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Policy</th>
+                            <th>Hold Reason</th>
+                            <th>Requested Date</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hold in holds %}
+                        <tr>
+                            <td>{{ hold[1] }}</td>
+                            <td>{{ hold[0] }}</td>
+                            <td>{{ hold[4] }}</td>
+                            <td>{{ hold[5][:16] if hold[5] else 'N/A' }}</td>
+                            <td>
+                                <small>
+                                    {{ hold[2] }}<br>
+                                    {{ hold[3] }}
+                                </small>
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('resolve_policy_hold', policy_id=hold[0], employee_id=hold[1]) }}" style="display: inline;">
+                                    <button type="submit" name="action" value="approve_hold" 
+                                            class="btn btn-sm btn-success"
+                                            onclick="return confirm('Approve this hold request?')">
+                                        Approve Hold
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('resolve_policy_hold', policy_id=hold[0], employee_id=hold[1]) }}" style="display: inline;">
+                                    <button type="submit" name="action" value="require_acknowledgment" 
+                                            class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Require acknowledgment?')">
+                                        Require Ack
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Full Report -->
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="fas fa-list"></i> Complete Acknowledgment Status</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped" id="reportTable">
+                    <thead>
+                        <tr>
+                            <th>Policy Name</th>
+                            <th>Employee</th>
+                            <th>Status</th>
+                            <th>Acknowledged Date</th>
+                            <th>Hold Date</th>
+                            <th>Hold Reason</th>
+                            <th>IP Address</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in report %}
+                        <tr>
+                            <td>{{ row[0] }}</td>
+                            <td>{{ row[1] }}</td>
+                            <td>
+                                <span class="badge badge-{% if row[2] == 'accepted' %}success{% elif row[2] == 'rejected' %}danger{% elif row[2] == 'hold' %}warning{% else %}secondary{% endif %}">
+                                    {{ row[2].title() }}
+                                </span>
+                            </td>
+                            <td>{{ row[3][:16] if row[3] else 'N/A' }}</td>
+                            <td>{{ row[4][:16] if row[4] else 'N/A' }}</td>
+                            <td>{{ row[5] or 'N/A' }}</td>
+                            <td>{{ row[6] or 'N/A' }}</td>
+                            <td>{{ row[7] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#reportTable').DataTable({
+        "pageLength": 25,
+        "order": [[ 0, "asc" ]],
+        "columnDefs": [
+            { "width": "20%", "targets": 0 },
+            { "width": "15%", "targets": 1 },
+            { "width": "10%", "targets": 2 }
+        ]
+    });
+});
+</script>
+
+{% endblock %}
